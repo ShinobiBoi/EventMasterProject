@@ -8,73 +8,80 @@ import { removeAuthUser, getAuthUser } from "../helper/Storage";
 import { useNavigate } from "react-router-dom";
 
 const Header = () => {
-  const navigate = useNavigate();
-  const auth = getAuthUser();
-  const Logout = () => {
-    removeAuthUser();
-    navigate("/");
-  };
+    const navigate = useNavigate();
+    const role = localStorage.getItem("userRole")
+    const Logout = () => {
+        localStorage.removeItem("userRole")
+        navigate("/login");
+    };
 
-  return (
-    <>
-      <Navbar bg="dark" variant="dark">
-        <Container>
-          <Navbar.Brand>
-            <Link className="nav-link" to={"/"}>
-              Event Master
-            </Link>
-          </Navbar.Brand>
-          <Nav className="me-auto">
-            <Link className="nav-link" to={"/"}>
-              List Events
-            </Link>
+    return (
+        <>
+            <Navbar bg="dark" variant="dark">
+                <Container>
+                    <Navbar.Brand>
+                        <Link className="nav-link" to={"/"}>
+                            Event Master
+                        </Link>
+                    </Navbar.Brand>
+                    <Nav className="me-auto">
+                        <Link className="nav-link" to={"/"}>
+                            List Events
+                        </Link>
 
-            {/* unAuthenticated Route  */}
-            {!auth && (
-              <>
-                <Link className="nav-link" to={"/login"}>
-                  Login
-                </Link>
-                <Link className="nav-link" to={"/register"}>
-                  Register
-                </Link>
-              </>
-            )}
-            
-            {!auth && (
-              <>
-                <Link className="nav-link" to={"/saved-events"}>
-                  Saved Events
-                </Link>
-              </>
-            )}
+                        {/* Unauthenticated Routes */}
+                        {!role && (
+                            <>
+                                <Link className="nav-link" to={"/login"}>
+                                    Login
+                                </Link>
+                                <Link className="nav-link" to={"/register"}>
+                                    Register
+                                </Link>
+                            </>
+                        )}
 
-            {/* Admin Routes  */}
+                        {/* Authenticated Routes */}
+                        {role && (
+                            <>
+                                {/* Saved Events - Visible to all authenticated users */}
+                                <Link className="nav-link" to={"/saved-events"}>
+                                    Saved Events
+                                </Link>
 
-            {/* {auth && auth.role === 1 && (
-              <> */}
-            <Link className="nav-link" to={"/manage-events"}>
-              Manage Events
-            </Link>
-            <Link className="nav-link" to="/manage-events/requests">
-              Event Requests
-            </Link>
-            <Link className="nav-link" to={"/manage-events/approve-organizer"}>
-              New Organizers Accounts
-            </Link>
+                                {/* Admin Routes */}
+                                {role === "Admin" && (
+                                    <>
+                                        <Link className="nav-link" to={"/manage-events"}>
+                                            Manage Events
+                                        </Link>
+                                        <Link className="nav-link" to="/manage-events/requests">
+                                            Event Requests
+                                        </Link>
+                                        <Link className="nav-link" to={"/manage-events/approve-organizer"}>
+                                            New Organizers Accounts
+                                        </Link>
+                                    </>
+                                )}
 
-            {/* </>
-            )} */}
-          </Nav>
+                                {/* Organizer Routes */}
+                                {role === "Organizer" && (
+                                    <Link className="nav-link" to={"/manage-events"}>
+                                        Manage Events
+                                    </Link>
+                                )}
+                            </>
+                        )}
+                    </Nav>
 
-          <Nav className="ms-auto">
-            {/* Authenticated Routes  */}
-            {auth && <Nav.Link onClick={Logout}>Logout</Nav.Link>}
-          </Nav>
-        </Container>
-      </Navbar>
-    </>
-  );
+                    <Nav className="ms-auto">
+                        {/* Logout - Visible to all authenticated users */}
+                        {role && <Nav.Link onClick={Logout}>Logout</Nav.Link>}
+                    </Nav>
+                </Container>
+            </Navbar>
+        </>
+    );
 };
 
 export default Header;

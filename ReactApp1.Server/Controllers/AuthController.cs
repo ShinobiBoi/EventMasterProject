@@ -103,8 +103,7 @@ namespace ReactApp1.Server.Controllers
                 return Ok(new
                 {
                     accessToken,
-                    refreshToken,
-                    role = user.Role
+                    refreshToken
                 });
             }
             catch (Exception ex)
