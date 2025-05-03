@@ -57,7 +57,7 @@ namespace ReactApp1.Server.Controllers
         }
 
         // Add new event
-        //[Authorize(Roles = "Admin,Organizer")]
+        [Authorize(Roles = "Admin,Organizer")]
         [HttpPost]
         public async Task<IActionResult> AddEvent([FromBody] Event eventItem)
         {

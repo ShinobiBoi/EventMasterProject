@@ -32,17 +32,17 @@ const AddEvent = () => {
         try {
 
            
-/*            // Debugging logs
+            // Debugging logs
             console.log("Submitting event:", data);
             const token = localStorage.getItem('token');
-            console.log("Using token:", token);*/
+            console.log("Using token:", token);
 
            
             const response = await fetch("/api/events", {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                    //'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(data)
             });
