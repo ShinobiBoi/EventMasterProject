@@ -28,7 +28,7 @@ const Login = () => {
         setError("");
 
         try {
-            const response = await fetch("https://localhost:5008/api/auth/login", {
+            const response = await fetch("/api/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -41,14 +41,16 @@ const Login = () => {
             if (!response.ok) {
                 throw new Error(data || "Login failed");
             }
+            const { accessToken, refreshToken, role } = data;
 
-            const { token } = data;
-
-            if (!token) {
+            if (!accessToken) {
                 throw new Error("No token returned from server.");
             }
 
-            localStorage.setItem("token", token);
+            localStorage.setItem("token", accessToken);
+            localStorage.setItem("refreshToken", refreshToken); 
+            localStorage.setItem("userRole", role); 
+           
             navigate("/dashboard");
         } catch (err) {
             console.error("Login error:", err);

@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
 });
 
 
-/*
+
 // Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -46,7 +46,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Add Authorization service
 builder.Services.AddAuthorization();
-*/
+
 var app = builder.Build();
 
 // Seed Admin Account (once on startup)
@@ -68,9 +68,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-/*app.UseAuthentication();    
+app.UseAuthentication();
 app.UseAuthorization();
-*/
+
 app.MapControllers();
 app.UseCors(); // Use it in the pipeline
 

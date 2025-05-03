@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ReactApp1.Server.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ReactApp1.Server.Controllers
 {
@@ -17,15 +20,24 @@ namespace ReactApp1.Server.Controllers
             _context = context;
         }
 
-        // Get all events (open to everyone)
+        // Get all events
         [HttpGet]
         public async Task<IActionResult> GetEvents()
         {
             var events = await _context.Events.ToListAsync();
+
+            foreach (var e in events)
+            {
+                if (!string.IsNullOrEmpty(e.Venue))
+                {
+                    e.Venue = DesEncryptionHelper.Decrypt(e.Venue);
+                }
+            }
+
             return Ok(events);
         }
 
-        // Get single event (open to everyone)
+        // Get single event
         [HttpGet("{id}")]
         public async Task<IActionResult> GetEvent(int id)
         {
@@ -36,12 +48,16 @@ namespace ReactApp1.Server.Controllers
                 return NotFound();
             }
 
+            if (!string.IsNullOrEmpty(eventItem.Venue))
+            {
+                eventItem.Venue = DesEncryptionHelper.Decrypt(eventItem.Venue);
+            }
+
             return Ok(eventItem);
         }
 
-        // Add new event (Admin, Organizer only)
-
-        //[Authorize(Roles = "Admin,Organizer")]
+        // Add new event
+        [Authorize(Roles = "Admin,Organizer")]
         [HttpPost]
         public async Task<IActionResult> AddEvent([FromBody] Event eventItem)
         {
@@ -52,13 +68,12 @@ namespace ReactApp1.Server.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Ensure required fields are mapped correctly
                 var newEvent = new Event
                 {
                     OrganizerName = eventItem.OrganizerName,
                     Title = eventItem.Title,
                     Description = eventItem.Description,
-                    Venue = eventItem.Venue,
+                    Venue = DesEncryptionHelper.Encrypt(eventItem.Venue),
                     EventDate = eventItem.EventDate,
                     TicketPrice = eventItem.TicketPrice,
                     TicketsLeft = eventItem.TicketsLeft,
@@ -75,8 +90,7 @@ namespace ReactApp1.Server.Controllers
                     {
                         Eventid = newEvent.Eventid,
                         OrganizerName = newEvent.OrganizerName,
-                        Title = newEvent.Title,
-                        // Include other properties you want to return
+                        Title = newEvent.Title
                     });
             }
             catch (Exception ex)
@@ -85,7 +99,7 @@ namespace ReactApp1.Server.Controllers
             }
         }
 
-        // Update event (Admin, Organizer only)
+        // Update event
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Organizer")]
         public async Task<IActionResult> UpdateEvent(Event eventItem)
@@ -99,7 +113,7 @@ namespace ReactApp1.Server.Controllers
 
             e.Title = eventItem.Title;
             e.Description = eventItem.Description;
-            e.Venue = eventItem.Venue;
+            e.Venue = DesEncryptionHelper.Encrypt(eventItem.Venue);
             e.EventDate = eventItem.EventDate;
             e.TicketPrice = eventItem.TicketPrice;
             e.TicketsLeft = eventItem.TicketsLeft;
@@ -108,7 +122,7 @@ namespace ReactApp1.Server.Controllers
             return Ok();
         }
 
-        // Delete event (Admin only)
+        // Delete event
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteEvent(int id)
