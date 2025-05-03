@@ -25,7 +25,7 @@ public class User
 
     public string RefreshToken { get; set; }
 
-    public DateTime RefreshTokenExpiryTime { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 
     [JsonIgnore]
     public List<Ticket> tickets { get; set; } = new List<Ticket>();
