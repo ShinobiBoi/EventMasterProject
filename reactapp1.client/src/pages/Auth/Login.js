@@ -41,7 +41,7 @@ const Login = () => {
             if (!response.ok) {
                 throw new Error(data || "Login failed");
             }
-            const { accessToken, refreshToken } = data;
+            const { accessToken, refreshToken, role } = data;
 
             if (!accessToken) {
                 throw new Error("No token returned from server.");
@@ -49,6 +49,8 @@ const Login = () => {
 
             localStorage.setItem("token", accessToken);
             localStorage.setItem("refreshToken", refreshToken); 
+            localStorage.setItem("userRole", role); 
+           
             navigate("/dashboard");
         } catch (err) {
             console.error("Login error:", err);
