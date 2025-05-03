@@ -40,7 +40,7 @@ const Signup = () => {
         };
 
         try {
-            const response = await fetch("https://localhost:5008/api/auth/register", {
+            const response = await fetch("api/auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
