@@ -88,9 +88,9 @@ namespace ReactApp1.Server.Controllers
                 if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                     return Unauthorized("Invalid credentials");
 
-                var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
-                if (!isPasswordValid)
-                    return Unauthorized("Invalid credentials");
+                if (!user.IsApproved && user.Role == "Organizer")
+                    return Unauthorized("Your account is pending admin approval.");
+
                 var accessToken = GenerateJwtToken(user);
                 var refreshToken = GenerateRefreshToken();
 
@@ -104,16 +104,8 @@ namespace ReactApp1.Server.Controllers
                 {
                     accessToken,
                     refreshToken,
-                    role = user.Role
+                    role=user.Role
                 });
-                if (!isPasswordValid)
-                    return Unauthorized("Invalid credentials");
-                var token = GenerateJwtToken(user);
-                return Ok(new { token });
-                    return Unauthorized("Your account is pending admin approval.");
-
-                var token = GenerateJwtToken(user);
-                return Ok(new { token });
             }
             catch (Exception ex)
             {
@@ -123,12 +115,20 @@ namespace ReactApp1.Server.Controllers
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.AccessToken) || string.IsNullOrEmpty(request.RefreshToken))
+                return BadRequest("Invalid client request");
+
+            var principal = GetPrincipalFromExpiredToken(request.AccessToken);
+            if (principal == null)
+                return BadRequest("Invalid access token or refresh token");
+
             var userEmail = principal.FindFirst(ClaimTypes.Email)?.Value;
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+
             if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 return Unauthorized();
-            };
+
             var newJwtToken = GenerateJwtToken(user);
             var newRefreshToken = GenerateRefreshToken();
 
@@ -137,14 +137,6 @@ namespace ReactApp1.Server.Controllers
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-                expires: DateTime.UtcNow.AddHours(3),
-                // expires: DateTime.UtcNow.AddMinutes(5),قالوا خلوه وقت قليل
-                signingCredentials: creds
-            );
-                expires: DateTime.UtcNow.AddHours(3),
-                // expires: DateTime.UtcNow.AddMinutes(5),قالوا خلوه وقت قليل
-                signingCredentials: creds
-            );
 
             return Ok(new
             {
@@ -226,7 +218,49 @@ namespace ReactApp1.Server.Controllers
                 user.IsApproved = true;
 
                 _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                return Ok("Organizer approved successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while approving the organizer: {ex.Message}");
+            }
         }
+
+
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // استخراج الإيميل من التوكن الحالي
+                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+
+                if (string.IsNullOrEmpty(userEmail))
+                    return Unauthorized("Invalid token");
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+
+                if (user == null)
+                    return NotFound("User not found");
+
+                // حذف التوكين الريفريش من قاعدة البيانات
+                user.RefreshToken = null;
+                user.RefreshTokenExpiryTime = null;
+
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                return Ok("Logged out successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error while logging out: {ex.Message}");
+            }
+        }
+
 
         #region Helper Methods
 
@@ -246,7 +280,7 @@ namespace ReactApp1.Server.Controllers
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires:DateTime.UtcNow.AddMinutes(3),
+                expires: DateTime.UtcNow.AddHours(3),
                 signingCredentials: creds
             );
 
@@ -285,13 +319,5 @@ namespace ReactApp1.Server.Controllers
         }
 
         #endregion
-                return Ok("Organizer approved successfully.");
-            }
-        }
-            {
-                return StatusCode(500, $"An error occurred while approving the organizer: {ex.Message}");
-            }
-        }
-
     }
 }
