@@ -103,7 +103,8 @@ namespace ReactApp1.Server.Controllers
                 return Ok(new
                 {
                     accessToken,
-                    refreshToken
+                    refreshToken,
+                    role=user.Role
                 });
             }
             catch (Exception ex)
@@ -229,36 +230,36 @@ namespace ReactApp1.Server.Controllers
 
 
         [HttpPost("logout")]
-[Authorize]
-public async Task<IActionResult> Logout()
-{
-    try
-    {
-        // استخراج الإيميل من التوكن الحالي
-        var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // استخراج الإيميل من التوكن الحالي
+                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
 
-        if (string.IsNullOrEmpty(userEmail))
-            return Unauthorized("Invalid token");
+                if (string.IsNullOrEmpty(userEmail))
+                    return Unauthorized("Invalid token");
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
 
-        if (user == null)
-            return NotFound("User not found");
+                if (user == null)
+                    return NotFound("User not found");
 
-        // حذف التوكين الريفريش من قاعدة البيانات
-        user.RefreshToken = null;
-        user.RefreshTokenExpiryTime = null;
+                // حذف التوكين الريفريش من قاعدة البيانات
+                user.RefreshToken = null;
+                user.RefreshTokenExpiryTime = null;
 
-        _context.Users.Update(user);
-        await _context.SaveChangesAsync();
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
 
-        return Ok("Logged out successfully");
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, $"Error while logging out: {ex.Message}");
-    }
-}
+                return Ok("Logged out successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error while logging out: {ex.Message}");
+            }
+        }
 
 
         #region Helper Methods

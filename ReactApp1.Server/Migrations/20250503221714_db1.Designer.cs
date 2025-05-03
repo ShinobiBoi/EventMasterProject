@@ -12,8 +12,8 @@ using ReactApp1.Server.Models;
 namespace ReactApp1.Server.Migrations
 {
     [DbContext(typeof(IaDatabaseContext))]
-    [Migration("20250503205915_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250503221714_db1")]
+    partial class db1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -118,7 +118,7 @@ namespace ReactApp1.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Role")
