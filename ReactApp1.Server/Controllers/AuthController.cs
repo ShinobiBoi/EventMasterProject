@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ReactApp1.Server.Models;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -36,7 +37,7 @@ namespace ReactApp1.Server.Controllers
                 }
                 else if (user.Role == "Organizer")
                 {
-                    user.IsApproved = false;
+                    user.IsApproved = true;
                 }
                 else
                 {
@@ -103,7 +104,8 @@ namespace ReactApp1.Server.Controllers
                 return Ok(new
                 {
                     accessToken,
-                    refreshToken
+                    refreshToken,
+                    role = user.Role
                 });
             }
             catch (Exception ex)
@@ -132,7 +134,7 @@ namespace ReactApp1.Server.Controllers
             var newRefreshToken = GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(6);
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
@@ -234,7 +236,7 @@ namespace ReactApp1.Server.Controllers
         {
             try
             {
-                // استخراج الإيميل من التوكن الحالي
+                
                 var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
 
                 if (string.IsNullOrEmpty(userEmail))
@@ -245,7 +247,7 @@ namespace ReactApp1.Server.Controllers
                 if (user == null)
                     return NotFound("User not found");
 
-                // حذف التوكين الريفريش من قاعدة البيانات
+                
                 user.RefreshToken = null;
                 user.RefreshTokenExpiryTime = null;
 
@@ -279,7 +281,7 @@ namespace ReactApp1.Server.Controllers
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(3),
+                expires: DateTime.UtcNow.AddMinutes(1),
                 signingCredentials: creds
             );
 

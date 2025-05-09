@@ -12,13 +12,8 @@ using ReactApp1.Server.Models;
 namespace ReactApp1.Server.Migrations
 {
     [DbContext(typeof(IaDatabaseContext))]
-<<<<<<<< HEAD:ReactApp1.Server/Migrations/20250503223637_InitialCreate.Designer.cs
-    [Migration("20250503223637_InitialCreate")]
+    [Migration("20250503225104_InitialCreate")]
     partial class InitialCreate
-========
-    [Migration("20250503221714_db1")]
-    partial class db1
->>>>>>>> master:ReactApp1.Server/Migrations/20250503221714_db1.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
