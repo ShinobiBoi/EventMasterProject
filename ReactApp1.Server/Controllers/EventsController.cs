@@ -37,6 +37,37 @@ namespace ReactApp1.Server.Controllers
             return Ok(events);
         }
 
+
+        [Authorize(Roles = "Admin,Organizer")]
+        [HttpGet("user/{id}")]
+        public async Task<IActionResult> GetEventsById(int id, [FromBody] String role) // Add the id parameter
+        {
+            // Filter events by userId
+            List<Event> events;
+
+
+            if (role.Equals("Organizer")){
+                events = await _context.Events
+                    .Where(e => e.userId == id)
+                    .ToListAsync();
+            }
+            else
+            {
+               events = await _context.Events.ToListAsync();
+
+            }
+
+                foreach (var e in events)
+                {
+                    if (!string.IsNullOrEmpty(e.Venue))
+                    {
+                        e.Venue = DesEncryptionHelper.Decrypt(e.Venue);
+                    }
+                }
+            
+            return Ok(events);
+        }
+
         // Get single event
         [HttpGet("{id}")]
         public async Task<IActionResult> GetEvent(int id)
@@ -78,7 +109,8 @@ namespace ReactApp1.Server.Controllers
                     TicketPrice = eventItem.TicketPrice,
                     TicketsLeft = eventItem.TicketsLeft,
                     ParticipantsSubmitted = eventItem.ParticipantsSubmitted,
-                    Submitted = eventItem.Submitted
+                    Submitted = eventItem.Submitted,
+                    userId = eventItem.userId
                 };
 
                 _context.Events.Add(newEvent);

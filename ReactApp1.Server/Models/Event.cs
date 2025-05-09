@@ -28,6 +28,10 @@ public partial class Event
 
     public bool Submitted { get; set; } = false;
 
+    
+    public int userId { get; set; }
+
+
     [JsonIgnore]
     public List<Ticket> Tickets { get; set; } = new List<Ticket>();
 }
