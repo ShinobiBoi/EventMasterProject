@@ -40,7 +40,7 @@ namespace ReactApp1.Server.Controllers
 
         [Authorize(Roles = "Admin,Organizer")]
         [HttpGet("user/{id}")]
-        public async Task<IActionResult> GetEventsById(int id, [FromBody] String role) // Add the id parameter
+public async Task<IActionResult> GetEventsById(string id, [FromQuery] string role) // Add the id parameter
         {
             // Filter events by userId
             List<Event> events;
@@ -48,7 +48,7 @@ namespace ReactApp1.Server.Controllers
 
             if (role.Equals("Organizer")){
                 events = await _context.Events
-                    .Where(e => e.userId == id)
+                    .Where(e => e.userId.Equals(id))
                     .ToListAsync();
             }
             else
@@ -90,7 +90,7 @@ namespace ReactApp1.Server.Controllers
         // Add new event
         [Authorize(Roles = "Admin,Organizer")]
         [HttpPost]
-        public async Task<IActionResult> AddEvent([FromBody] Event eventItem)
+        public async Task<IActionResult> AddEvent( Event eventItem)
         {
             try
             {
@@ -156,7 +156,7 @@ namespace ReactApp1.Server.Controllers
 
         // Delete event
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Organizer")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
             var eventItem = await _context.Events.FindAsync(id);

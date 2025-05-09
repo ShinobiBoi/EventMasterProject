@@ -64,7 +64,11 @@ export const routes = createBrowserRouter([
           {
             path: "approve-organizer",
             element: <ApproveOrganizer />,
-          }
+            },
+            {
+                path: "decode",
+                element: <authUtils />,
+            }
         ],
       },
     ],

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Alert from "react-bootstrap/Alert";
 import "../../css/Login.css";
+import { getUserId } from './authUtils';
 
 const AddEvent = () => {
 
@@ -11,6 +12,9 @@ const AddEvent = () => {
     const [success, setSuccess] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+    const token = localStorage.getItem("token");
+    const userId = getUserId(token)
 
 
 
@@ -23,7 +27,8 @@ const AddEvent = () => {
         const body = Object.fromEntries(formData.entries());
         const data = {
             ...body,
-            submitted: true
+            submitted: true,
+            userId
         };
         console.log('Form data:', data);
 
