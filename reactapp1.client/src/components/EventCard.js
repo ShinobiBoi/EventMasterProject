@@ -13,7 +13,7 @@ const EventsCard = ({
     date,
     ticketPrice,
     ticketsLeft,
-    ParticipantsSubmitted,
+    participantsSubmitted,
     onRegister,
     onSave,
     userId
@@ -22,7 +22,7 @@ const EventsCard = ({
     const userRole = localStorage.getItem("userRole");
 
     const handleViewEvent = () => {
-        navigate(`/event/${eventId}`);
+        navigate(`/manage-events/events/${eventId}`);
     };
 
 
@@ -102,7 +102,7 @@ const EventsCard = ({
                         </div>
                         <div className="mb-2" style={{ minWidth: "100%" }}>
                             <strong>👥 Participants:</strong><br />
-                            <span className="text-secondary">{ParticipantsSubmitted}</span>
+                            <span className="text-secondary">{participantsSubmitted}</span>
                         </div>
                     </div>
                 </div>

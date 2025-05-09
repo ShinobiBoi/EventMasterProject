@@ -11,6 +11,7 @@ import Admin from "./middleware/Admin";
 import EventRequests from "./pages/manage-events/EventRequests";
 import ApproveOrganizer from "./pages/manage-events/ApproveOrganizer";
 import SavedEvents from './pages/SavedEvents';
+import EventDetails from "./pages/manage-events/EventDetails";
 
 
 export const routes = createBrowserRouter([
@@ -53,10 +54,10 @@ export const routes = createBrowserRouter([
             path: "add",
             element: <AddEvent />,
           },
-          {
-            path: ":id",
-            element: <UpdateEvent />,
-          },
+            {
+                path: "update/:eventId",
+                element: <UpdateEvent />
+            },
           {
             path: "requests",
             element: <EventRequests />,
@@ -68,6 +69,10 @@ export const routes = createBrowserRouter([
             {
                 path: "decode",
                 element: <authUtils />,
+            },
+            {
+                path: "events/:id",
+                element: <EventDetails />,
             }
         ],
       },

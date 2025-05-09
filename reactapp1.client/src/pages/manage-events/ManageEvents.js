@@ -59,9 +59,15 @@ const ManageEvents = () => {
         }
     };
 
-    const handleUpdate = (eventId) => {
+    const handleView = async (eventId) => {
+        navigate(`/manage-events/events/${eventId}`);
+    };
+
+    const handleUpdate = async (eventId) => {
         navigate(`/manage-events/update/${eventId}`);
     };
+
+
 
     if (userRole !== "Organizer") {
         return null;
@@ -136,16 +142,17 @@ const ManageEvents = () => {
                                         </button>
                                         <button
                                             className="btn btn-sm btn-primary mx-2"
-                                            on Click={() => handleUpdate(event.eventId)}
+                                            onClick={() => handleUpdate(event.eventid)}
                                         >
                                             Update
                                         </button>
-                                        <Link
+                                        <button
                                             to={`/event/${event.eventId}`}
                                             className="btn btn-sm btn-info"
+                                            onClick={() => handleView(event.eventid)}
                                         >
                                             View
-                                        </Link>
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

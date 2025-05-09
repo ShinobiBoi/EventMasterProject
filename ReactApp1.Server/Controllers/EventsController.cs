@@ -130,28 +130,80 @@ public async Task<IActionResult> GetEventsById(string id, [FromQuery] string rol
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-        // Update event
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Organizer")]
-        public async Task<IActionResult> UpdateEvent(Event eventItem)
+        public async Task<IActionResult> UpdateEvent(int id, [FromBody] Event eventItem)
         {
-            var e = await _context.Events.FindAsync(eventItem.Eventid);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            if (e == null)
+            var existingEvent = await _context.Events.FindAsync(id);
+            if (existingEvent == null)
             {
                 return NotFound("Event not found");
             }
 
-            e.Title = eventItem.Title;
-            e.Description = eventItem.Description;
-            e.Venue = DesEncryptionHelper.Encrypt(eventItem.Venue);
-            e.EventDate = eventItem.EventDate;
-            e.TicketPrice = eventItem.TicketPrice;
-            e.TicketsLeft = eventItem.TicketsLeft;
+            // Update only the allowed fields
+            existingEvent.Title = eventItem.Title;
+            existingEvent.Description = eventItem.Description;
+            existingEvent.Venue = DesEncryptionHelper.Encrypt(eventItem.Venue);
+            existingEvent.EventDate = eventItem.EventDate;
+            existingEvent.TicketPrice = eventItem.TicketPrice;
+            existingEvent.TicketsLeft = eventItem.TicketsLeft;
+            existingEvent.ParticipantsSubmitted = eventItem.ParticipantsSubmitted;
 
-            await _context.SaveChangesAsync();
-            return Ok();
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(existingEvent);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Concurrency error occurred");
+            }
+        }
+
+
+        [HttpPatch("register/{id}")]
+        [Authorize(Roles = "Admin,Organizer,Attendee")] // Allow users to register for events
+        public async Task<IActionResult> RegisterForEvent(int id)
+        {
+            var existingEvent = await _context.Events.FindAsync(id);
+            if (existingEvent == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            // Check if there are tickets available
+            if (existingEvent.TicketsLeft <= 0)
+            {
+                return BadRequest("No tickets available for this event");
+            }
+
+            // Update the counts
+            existingEvent.ParticipantsSubmitted++;
+            existingEvent.TicketsLeft--;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new
+                {
+                    Message = "Successfully registered for event",
+                    Participants = existingEvent.ParticipantsSubmitted,
+                    TicketsLeft = existingEvent.TicketsLeft
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Concurrency error occurred while updating event");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // Delete event

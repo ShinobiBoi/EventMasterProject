@@ -4,27 +4,62 @@ import Form from "react-bootstrap/Form";
 import Spinner from "react-bootstrap/Spinner";
 import Alert from "react-bootstrap/Alert";
 import axios from "axios";
+import { getUserId, getUserRole } from '../manage-events/authUtils';
 
 const Home = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const res = await axios.get("api/events");
-                setEvents(res.data);
-            } catch (err) {
-                console.error(err);
-                setError("Failed to load events.");
-            } finally {
-                setLoading(false);
-            }
-        };
 
+    const fetchEvents = async () => {
+        try {
+            const res = await axios.get("api/events");
+            setEvents(res.data);
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load events.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchEvents();
     }, []);
+
+    const handleRegister = async (event) => {
+        const token = localStorage.getItem("token"); 
+        const userId = getUserId(token); 
+        try {
+            // First, register the user for the event by creating a ticket
+            const ticketResponse = await fetch(`/api/tickets/${userId}/${event.eventid}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` // Include the token in the request headers
+                }
+            });
+            if (!ticketResponse.ok) {
+                throw new Error("Failed to register for event");
+            }
+            const eventResponse = await fetch(`/api/events/register/${event.eventid}`, {
+                method: "PATCH", // Use PATCH to register for the event
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` // Include the token in the request headers
+                }
+            });
+            if (!eventResponse.ok) {
+                throw new Error("Failed to update event registration");
+            }
+            fetchEvents();
+        } catch (error) {
+            console.error("Registration error:", error.message);
+           
+        }
+    };
+
 
     return (
         <div className="home-container p-5">
@@ -80,6 +115,7 @@ const Home = () => {
                 {events.map((event) => (
                     <div className="col-md-4 card-event-container my-4" key={event.eventid}>
                         <EventsCard
+                            eventId={event.eventid}
                             title={event.title}
                             organizer={event.organizerName}
                             description={event.description}
@@ -87,8 +123,9 @@ const Home = () => {
                             date={new Date(event.eventDate).toLocaleDateString()}
                             ticketPrice={event.ticketPrice}
                             ticketsLeft={event.ticketsLeft}
-                            participants={event.participantsSubmitted}
-                            onRegister={() => console.log("Register", event.eventid)}
+                            participantsSubmitted={event.participantsSubmitted}
+                            userId={event.userId}
+                            onRegister={() => handleRegister(event)}
                             onSave={() => console.log("Save", event.eventid)}
                         />
                     </div>
