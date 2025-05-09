@@ -25,7 +25,8 @@ namespace ReactApp1.Server.Migrations
                     TicketPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     TicketsLeft = table.Column<int>(type: "int", nullable: false),
                     ParticipantsSubmitted = table.Column<int>(type: "int", nullable: false),
-                    Submitted = table.Column<bool>(type: "bit", nullable: false)
+                    Submitted = table.Column<bool>(type: "bit", nullable: false),
+                    userId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

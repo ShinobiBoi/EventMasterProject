@@ -61,6 +61,9 @@ namespace ReactApp1.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("userId")
+                        .HasColumnType("int");
+
                     b.HasKey("Eventid");
 
                     b.ToTable("Events");
