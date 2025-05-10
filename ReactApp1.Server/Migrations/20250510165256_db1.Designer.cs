@@ -12,13 +12,8 @@ using ReactApp1.Server.Models;
 namespace ReactApp1.Server.Migrations
 {
     [DbContext(typeof(IaDatabaseContext))]
-<<<<<<<< HEAD:ReactApp1.Server/Migrations/20250509161914_db1.Designer.cs
-    [Migration("20250509161914_db1")]
+    [Migration("20250510165256_db1")]
     partial class db1
-========
-    [Migration("20250503225104_InitialCreate")]
-    partial class InitialCreate
->>>>>>>> essam:ReactApp1.Server/Migrations/20250503225104_InitialCreate.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,8 +64,9 @@ namespace ReactApp1.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("userId")
-                        .HasColumnType("int");
+                    b.Property<string>("userId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Eventid");
 
@@ -91,6 +87,12 @@ namespace ReactApp1.Server.Migrations
                     b.Property<Guid>("ParticipantId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("numberOfTickets")
+                        .HasColumnType("int");
+
+                    b.Property<int>("totalPrice")
+                        .HasColumnType("int");
+
                     b.HasKey("TicketId");
 
                     b.HasIndex("EventId");
@@ -98,6 +100,30 @@ namespace ReactApp1.Server.Migrations
                     b.HasIndex("ParticipantId");
 
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("SavedEvent", b =>
+                {
+                    b.Property<Guid>("SavedEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SavedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("SavedEventId");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SavedEvents");
                 });
 
             modelBuilder.Entity("User", b =>
@@ -155,6 +181,25 @@ namespace ReactApp1.Server.Migrations
                     b.Navigation("Event");
 
                     b.Navigation("Participant");
+                });
+
+            modelBuilder.Entity("SavedEvent", b =>
+                {
+                    b.HasOne("ReactApp1.Server.Models.Event", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ReactApp1.Server.Models.Event", b =>

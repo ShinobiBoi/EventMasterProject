@@ -9,49 +9,69 @@ namespace ReactApp1.Server.Controllers
     [ApiController]
     public class TicketsController : ControllerBase
     {
-
         private readonly IaDatabaseContext _context;
-
 
         public TicketsController(IaDatabaseContext context)
         {
             _context = context;
         }
 
-
-
-
-        [HttpGet("{id}")]
+        [HttpGet("user/{id}")]
         public async Task<IActionResult> GetMyTickets(Guid id)
         {
             var tickets = await _context.Tickets
                 .Include(t => t.Event)
                 .Include(t => t.Participant)
                 .Where(t => t.ParticipantId == id)
+                .Select(t => new {
+                    TicketId = t.TicketId,
+                    EventId = t.EventId,
+                    EventTitle = t.Event.Title,
+                    EventDescription = t.Event.Description,
+                    EventDate = t.Event.EventDate,
+                    EventVenue = t.Event.Venue,
+                    Quantity = t.numberOfTickets,
+                    totalPrice = t.totalPrice
+                })
                 .ToListAsync();
 
             if (!tickets.Any())
             {
-                return NotFound("No events found on the specified date");
+                return NotFound("No tickets found for this user");
             }
 
             return Ok(tickets);
         }
 
-        
         [HttpPost("{userId}/{eventId}")]
-        public async Task<IActionResult> buyTicket(Guid userId,int eventId)
+        public async Task<IActionResult> BuyTicket(Guid userId, int eventId, [FromBody] TicketRequest request)
         {
-            await _context.Tickets.AddAsync(new Ticket {
-                ParticipantId =userId,
-                EventId =eventId
-            }); 
+  
+            // Create new ticket
+            var ticket = new Ticket
+            {
+                ParticipantId = userId,
+                EventId = eventId,
+                numberOfTickets = request.NumberOfTickets,
+                totalPrice = request.TotalPrice
+            };
 
-                _context.SaveChanges();
+            await _context.Tickets.AddAsync(ticket);
 
 
-            return Ok();
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Tickets purchased successfully",
+                TicketId = ticket.TicketId
+            });
         }
+    }
 
+    public class TicketRequest
+    {
+        public int NumberOfTickets { get; set; }
+        public int TotalPrice { get; set; }
     }
 }

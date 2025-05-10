@@ -9,8 +9,9 @@ import UpdateEvent from "./pages/manage-events/UpdateEvent";
 import Guest from "./middleware/Guest";
 import Admin from "./middleware/Admin";
 import EventRequests from "./pages/manage-events/EventRequests";
+import MyTickets from "./pages/manage-events/MyTickets";
 import ApproveOrganizer from "./pages/manage-events/ApproveOrganizer";
-import SavedEvents from './pages/SavedEvents';
+import SavedEvents from './pages/manage-events/SavedEvents';
 import EventDetails from "./pages/manage-events/EventDetails";
 
 
@@ -23,10 +24,7 @@ export const routes = createBrowserRouter([
         path: "/",
         element: <Home />,
       },
-      {
-        path: "/saved-events", 
-        element: <SavedEvents />,
-      },
+
 
       // GUEST MIDDLEWARE
       {
@@ -69,6 +67,14 @@ export const routes = createBrowserRouter([
             {
                 path: "decode",
                 element: <authUtils />,
+            },
+            {
+                path: "saved-events",
+                element: <SavedEvents />,
+            },
+            {
+                path: "my-tickets",
+                element: <MyTickets />,
             },
             {
                 path: "events/:id",

@@ -24,23 +24,64 @@ namespace ReactApp1.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetEvents()
         {
-            var events = await _context.Events.ToListAsync();
-
-            foreach (var e in events)
-            {
-                if (!string.IsNullOrEmpty(e.Venue))
-                {
-                    e.Venue = DesEncryptionHelper.Decrypt(e.Venue);
-                }
-            }
+            var events = await _context.Events.
+                Where(e => e.Submitted == true).ToListAsync();
 
             return Ok(events);
         }
 
 
+        // Get all unsubmitted events (Admin only)
+        [Authorize(Roles = "Admin")]
+        [HttpGet("unsubmitted")]
+        public async Task<IActionResult> GetUnsubmittedEvents()
+        {
+            var events = await _context.Events
+                .Where(e => e.Submitted == false)
+                .ToListAsync();
+
+            return Ok(events);
+        }
+
+        // Approve an event (Admin only)
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("approve/{id}")]
+        public async Task<IActionResult> ApproveEvent(int id)
+        {
+            var eventItem = await _context.Events.FindAsync(id);
+            if (eventItem == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            // Approve the event by setting Submitted to true
+            eventItem.Submitted = true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new
+                {
+                    Message = "Event approved successfully",
+                    EventId = eventItem.Eventid,
+                    Title = eventItem.Title,
+                    Submitted = eventItem.Submitted
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Concurrency error occurred while approving event");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
         [Authorize(Roles = "Admin,Organizer")]
         [HttpGet("user/{id}")]
-public async Task<IActionResult> GetEventsById(string id, [FromQuery] string role) // Add the id parameter
+        public async Task<IActionResult> GetEventsById(string id, [FromQuery] string role) // Add the id parameter
         {
             // Filter events by userId
             List<Event> events;
@@ -56,14 +97,6 @@ public async Task<IActionResult> GetEventsById(string id, [FromQuery] string rol
                events = await _context.Events.ToListAsync();
 
             }
-
-                foreach (var e in events)
-                {
-                    if (!string.IsNullOrEmpty(e.Venue))
-                    {
-                        e.Venue = DesEncryptionHelper.Decrypt(e.Venue);
-                    }
-                }
             
             return Ok(events);
         }
@@ -77,11 +110,6 @@ public async Task<IActionResult> GetEventsById(string id, [FromQuery] string rol
             if (eventItem == null)
             {
                 return NotFound();
-            }
-
-            if (!string.IsNullOrEmpty(eventItem.Venue))
-            {
-                eventItem.Venue = DesEncryptionHelper.Decrypt(eventItem.Venue);
             }
 
             return Ok(eventItem);
@@ -104,7 +132,7 @@ public async Task<IActionResult> GetEventsById(string id, [FromQuery] string rol
                     OrganizerName = eventItem.OrganizerName,
                     Title = eventItem.Title,
                     Description = eventItem.Description,
-                    Venue = DesEncryptionHelper.Encrypt(eventItem.Venue),
+                    Venue = eventItem.Venue,
                     EventDate = eventItem.EventDate,
                     TicketPrice = eventItem.TicketPrice,
                     TicketsLeft = eventItem.TicketsLeft,
@@ -148,7 +176,7 @@ public async Task<IActionResult> GetEventsById(string id, [FromQuery] string rol
             // Update only the allowed fields
             existingEvent.Title = eventItem.Title;
             existingEvent.Description = eventItem.Description;
-            existingEvent.Venue = DesEncryptionHelper.Encrypt(eventItem.Venue);
+            existingEvent.Venue = eventItem.Venue;
             existingEvent.EventDate = eventItem.EventDate;
             existingEvent.TicketPrice = eventItem.TicketPrice;
             existingEvent.TicketsLeft = eventItem.TicketsLeft;

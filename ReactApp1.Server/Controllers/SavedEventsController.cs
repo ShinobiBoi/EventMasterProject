@@ -17,7 +17,7 @@ namespace ReactApp1.Server.Controllers
         }
 
         // Save an event
-        [Authorize(Roles = "Attendee,Organizer,Admin")]
+        //[Authorize(Roles = "Attendee,Organizer,Admin")]
         [HttpPost("{userId}/{eventId}")]
         public async Task<IActionResult> SaveEvent(Guid userId, int eventId)
         {
@@ -40,7 +40,7 @@ namespace ReactApp1.Server.Controllers
         }
 
         // Get saved events for user
-        [Authorize]
+        //[Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetSavedEvents(Guid userId)
         {

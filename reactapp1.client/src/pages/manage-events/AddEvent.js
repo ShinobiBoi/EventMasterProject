@@ -27,7 +27,7 @@ const AddEvent = () => {
         const body = Object.fromEntries(formData.entries());
         const data = {
             ...body,
-            submitted: true,
+            submitted: false,
             userId
         };
         console.log('Form data:', data);
@@ -125,13 +125,41 @@ const AddEvent = () => {
 
                 <Form.Group className="mb-3">
                     <Form.Label>Venue *</Form.Label>
-                    <Form.Control
-                        type="text"
+                    <Form.Select
                         name="venue"
                         required
-                        placeholder="Enter venue location"
                         disabled={isSubmitting}
-                    />
+                        defaultValue=""
+                    >
+                        <option value="" disabled>Select a city</option>
+                        <option>Alexandria</option>
+                        <option>Aswan</option>
+                        <option>Assiut</option>
+                        <option>Beheira</option>
+                        <option>Beni Suef</option>
+                        <option>Cairo</option>
+                        <option>Dakahlia</option>
+                        <option>Damietta</option>
+                        <option>Fayoum</option>
+                        <option>Gharbia</option>
+                        <option>Giza</option>
+                        <option>Ismailia</option>
+                        <option>Kafr el-Sheikh</option>
+                        <option>Matrouh</option>
+                        <option>Minya</option>
+                        <option>Menofia</option>
+                        <option>New Valley</option>
+                        <option>North Sinai</option>
+                        <option>Port Said</option>
+                        <option>Qualyubia</option>
+                        <option>Qena</option>
+                        <option>Red Sea</option>
+                        <option>Al-Sharqia</option>
+                        <option>Soha</option>
+                        <option>South Sinai</option>
+                        <option>Suez</option>
+                        <option>Luxor</option>
+                    </Form.Select>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -140,6 +168,7 @@ const AddEvent = () => {
                         type="datetime-local"
                         name="eventDate"
                         required
+                        min={new Date().toISOString().slice(0, 16)}
                         disabled={isSubmitting}
                     />
                 </Form.Group>

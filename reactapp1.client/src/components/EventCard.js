@@ -77,11 +77,6 @@ const EventsCard = ({
 
                 {/* Event Details */}
                 <div className="px-2">
-                    <p className="mb-2">
-                        <strong className="text-dark">📝 Description:</strong>
-                        <br />
-                        <span className="text-secondary">{description}</span>
-                    </p>
 
                     <div className="d-flex flex-wrap justify-content-between mt-3">
                         <div className="mb-2" style={{ minWidth: "45%" }}>
@@ -99,10 +94,6 @@ const EventsCard = ({
                         <div className="mb-2" style={{ minWidth: "45%" }}>
                             <strong>🎟️ Tickets Left:</strong><br />
                             <span className="text-secondary">{ticketsLeft}</span>
-                        </div>
-                        <div className="mb-2" style={{ minWidth: "100%" }}>
-                            <strong>👥 Participants:</strong><br />
-                            <span className="text-secondary">{participantsSubmitted}</span>
                         </div>
                     </div>
                 </div>

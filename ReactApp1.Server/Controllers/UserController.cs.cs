@@ -23,10 +23,12 @@ namespace ReactApp1.Server.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == user.Email))
                 return BadRequest("Email already exists");
 
-            if (user.Role == "Attendee" || user.Role == "Organizer")
+            if (user.Role == "Attendee")
                 user.IsApproved = true;
+            else if(user.Role == "Organizer")
+                user.IsApproved = false;
             else
-                return Unauthorized("Only Attendee or Organizer registration is allowed");
+                        return Unauthorized("Only Attendee or Organizer registration is allowed");
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             await _context.Users.AddAsync(user);
@@ -75,6 +77,17 @@ namespace ReactApp1.Server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("User deleted successfully");
+        }
+
+        [HttpGet("pending-organizers")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetPendingOrganizers()
+        {
+            var pendingOrganizers = await _context.Users
+                .Where(u => u.Role == "Organizer" && u.IsApproved == false)
+                .ToListAsync();
+
+            return Ok(pendingOrganizers);
         }
 
         [HttpPost("approve-organizer/{id}")]
