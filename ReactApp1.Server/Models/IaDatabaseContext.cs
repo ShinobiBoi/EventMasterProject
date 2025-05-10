@@ -22,4 +22,6 @@ public  class IaDatabaseContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
 
+    public virtual DbSet<SavedEvent> SavedEvents { get; set; }
+
 }
