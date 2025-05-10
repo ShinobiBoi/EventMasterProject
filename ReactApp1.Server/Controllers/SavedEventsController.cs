@@ -39,17 +39,23 @@ namespace ReactApp1.Server.Controllers
             return Ok("Event saved");
         }
 
-        // Get saved events for user
         [Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetSavedEvents(Guid userId)
         {
             var savedEvents = await _context.SavedEvents
-                .Include(se => se.Event) // تحميل بيانات الحدث المرتبط
-                .Where(se => se.UserId == userId)
-               
-                .ToListAsync();
+       .Include(s => s.Event)
+       .Where(s => s.UserId == userId)
+       .Select(s => new
+       {
+           s.Event.Eventid,
+           s.Event.Title,
+           s.Event.Description,
+           s.Event.EventDate,
+           s.Event.Venue
 
+       })
+       .ToListAsync();
             if (!savedEvents.Any())
             {
                 return NotFound("No saved events found for this user.");
