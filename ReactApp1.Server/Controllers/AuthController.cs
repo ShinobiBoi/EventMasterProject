@@ -126,7 +126,7 @@ namespace ReactApp1.Server.Controllers
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(1),
+                expires: DateTime.UtcNow.AddDays(2),
                 signingCredentials: creds
             );
 
