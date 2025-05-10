@@ -40,7 +40,7 @@ const Signup = () => {
         };
 
         try {
-            const response = await fetch("api/auth/register", {
+            const response = await fetch("api/user/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -104,23 +104,6 @@ const Signup = () => {
                                 <option value="organizer">Event Organizer</option>
                             </Form.Select>
                         </Form.Group>
-
-                        {/* Only visible if "organizer" is selected (controlled by JavaScript or React logic) */}
-                        <Form.Group className="mb-3">
-                            <Form.Label>Organization Name</Form.Label>
-                            <Form.Control type="text" name="organizationName" placeholder="Enter organization name" disabled={isSubmitting} />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Address</Form.Label>
-                            <Form.Control type="text" name="address" placeholder="Enter address" disabled={isSubmitting} />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Phone (Optional)</Form.Label>
-                            <Form.Control type="text" name="phone" placeholder="Enter phone number" disabled={isSubmitting} />
-                        </Form.Group>
-
                         <Button className="btn btn-dark w-100" type="submit" disabled={isSubmitting}>
                             {isSubmitting ? "Registering..." : "Sign Up"}
                         </Button>

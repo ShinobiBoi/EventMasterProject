@@ -29,7 +29,7 @@ public partial class Event
     public bool Submitted { get; set; } = false;
 
     
-    public int userId { get; set; }
+    public String userId { get; set; }
 
 
     [JsonIgnore]

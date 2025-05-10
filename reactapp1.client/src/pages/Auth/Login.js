@@ -36,22 +36,37 @@ const Login = () => {
                 body: JSON.stringify(formData),
             });
 
-            const data = await response.json();
+            // First check if the response is JSON
+            const contentType = response.headers.get("content-type");
+            let errorMessage = "Login failed";
 
-            if (!response.ok) {
-                throw new Error(data || "Login failed");
+            if (contentType && contentType.includes("application/json")) {
+                const data = await response.json();
+
+                if (response.ok) {
+                    const { accessToken, refreshToken, role, userId, fullName } = data;
+
+                    if (!accessToken) {
+                        throw new Error("No token returned from server.");
+                    }
+
+                    localStorage.setItem("token", accessToken);
+                    localStorage.setItem("refreshToken", refreshToken);
+                    localStorage.setItem("userRole", role);
+                    localStorage.setItem("userId", userId);
+                    localStorage.setItem("userName", fullName);
+
+                    navigate("/dashboard");
+                    return;
+                } else {
+                    errorMessage = data.message || data.error || JSON.stringify(data);
+                }
+            } else {
+                // Handle non-JSON responses (like plain text)
+                errorMessage = await response.text();
             }
-            const { accessToken, refreshToken, role } = data;
 
-            if (!accessToken) {
-                throw new Error("No token returned from server.");
-            }
-
-            localStorage.setItem("token", accessToken);
-            localStorage.setItem("refreshToken", refreshToken); 
-            localStorage.setItem("userRole", role); 
-           
-            navigate("/dashboard");
+            throw new Error(errorMessage);
         } catch (err) {
             console.error("Login error:", err);
             setError(err.message || "An error occurred. Please try again.");

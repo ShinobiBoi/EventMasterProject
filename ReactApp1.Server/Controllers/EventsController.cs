@@ -24,23 +24,64 @@ namespace ReactApp1.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetEvents()
         {
-            var events = await _context.Events.ToListAsync();
-
-            foreach (var e in events)
-            {
-                if (!string.IsNullOrEmpty(e.Venue))
-                {
-                    e.Venue = DesEncryptionHelper.Decrypt(e.Venue);
-                }
-            }
+            var events = await _context.Events.
+                Where(e => e.Submitted == true).ToListAsync();
 
             return Ok(events);
         }
 
 
+        // Get all unsubmitted events (Admin only)
+        [Authorize(Roles = "Admin")]
+        [HttpGet("unsubmitted")]
+        public async Task<IActionResult> GetUnsubmittedEvents()
+        {
+            var events = await _context.Events
+                .Where(e => e.Submitted == false)
+                .ToListAsync();
+
+            return Ok(events);
+        }
+
+        // Approve an event (Admin only)
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("approve/{id}")]
+        public async Task<IActionResult> ApproveEvent(int id)
+        {
+            var eventItem = await _context.Events.FindAsync(id);
+            if (eventItem == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            // Approve the event by setting Submitted to true
+            eventItem.Submitted = true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new
+                {
+                    Message = "Event approved successfully",
+                    EventId = eventItem.Eventid,
+                    Title = eventItem.Title,
+                    Submitted = eventItem.Submitted
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Concurrency error occurred while approving event");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
         [Authorize(Roles = "Admin,Organizer")]
         [HttpGet("user/{id}")]
-        public async Task<IActionResult> GetEventsById(int id, [FromBody] String role) // Add the id parameter
+        public async Task<IActionResult> GetEventsById(string id, [FromQuery] string role) // Add the id parameter
         {
             // Filter events by userId
             List<Event> events;
@@ -48,7 +89,7 @@ namespace ReactApp1.Server.Controllers
 
             if (role.Equals("Organizer")){
                 events = await _context.Events
-                    .Where(e => e.userId == id)
+                    .Where(e => e.userId.Equals(id))
                     .ToListAsync();
             }
             else
@@ -56,14 +97,6 @@ namespace ReactApp1.Server.Controllers
                events = await _context.Events.ToListAsync();
 
             }
-
-                foreach (var e in events)
-                {
-                    if (!string.IsNullOrEmpty(e.Venue))
-                    {
-                        e.Venue = DesEncryptionHelper.Decrypt(e.Venue);
-                    }
-                }
             
             return Ok(events);
         }
@@ -79,18 +112,13 @@ namespace ReactApp1.Server.Controllers
                 return NotFound();
             }
 
-            if (!string.IsNullOrEmpty(eventItem.Venue))
-            {
-                eventItem.Venue = DesEncryptionHelper.Decrypt(eventItem.Venue);
-            }
-
             return Ok(eventItem);
         }
 
         // Add new event
         [Authorize(Roles = "Admin,Organizer")]
         [HttpPost]
-        public async Task<IActionResult> AddEvent([FromBody] Event eventItem)
+        public async Task<IActionResult> AddEvent( Event eventItem)
         {
             try
             {
@@ -104,7 +132,7 @@ namespace ReactApp1.Server.Controllers
                     OrganizerName = eventItem.OrganizerName,
                     Title = eventItem.Title,
                     Description = eventItem.Description,
-                    Venue = DesEncryptionHelper.Encrypt(eventItem.Venue),
+                    Venue = eventItem.Venue,
                     EventDate = eventItem.EventDate,
                     TicketPrice = eventItem.TicketPrice,
                     TicketsLeft = eventItem.TicketsLeft,
@@ -130,33 +158,85 @@ namespace ReactApp1.Server.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-        // Update event
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Organizer")]
-        public async Task<IActionResult> UpdateEvent(Event eventItem)
+        public async Task<IActionResult> UpdateEvent(int id, [FromBody] Event eventItem)
         {
-            var e = await _context.Events.FindAsync(eventItem.Eventid);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            if (e == null)
+            var existingEvent = await _context.Events.FindAsync(id);
+            if (existingEvent == null)
             {
                 return NotFound("Event not found");
             }
 
-            e.Title = eventItem.Title;
-            e.Description = eventItem.Description;
-            e.Venue = DesEncryptionHelper.Encrypt(eventItem.Venue);
-            e.EventDate = eventItem.EventDate;
-            e.TicketPrice = eventItem.TicketPrice;
-            e.TicketsLeft = eventItem.TicketsLeft;
+            // Update only the allowed fields
+            existingEvent.Title = eventItem.Title;
+            existingEvent.Description = eventItem.Description;
+            existingEvent.Venue = eventItem.Venue;
+            existingEvent.EventDate = eventItem.EventDate;
+            existingEvent.TicketPrice = eventItem.TicketPrice;
+            existingEvent.TicketsLeft = eventItem.TicketsLeft;
+            existingEvent.ParticipantsSubmitted = eventItem.ParticipantsSubmitted;
 
-            await _context.SaveChangesAsync();
-            return Ok();
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(existingEvent);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Concurrency error occurred");
+            }
+        }
+
+
+        [HttpPatch("register/{id}")]
+        [Authorize(Roles = "Admin,Organizer,Attendee")] // Allow users to register for events
+        public async Task<IActionResult> RegisterForEvent(int id)
+        {
+            var existingEvent = await _context.Events.FindAsync(id);
+            if (existingEvent == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            // Check if there are tickets available
+            if (existingEvent.TicketsLeft <= 0)
+            {
+                return BadRequest("No tickets available for this event");
+            }
+
+            // Update the counts
+            existingEvent.ParticipantsSubmitted++;
+            existingEvent.TicketsLeft--;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new
+                {
+                    Message = "Successfully registered for event",
+                    Participants = existingEvent.ParticipantsSubmitted,
+                    TicketsLeft = existingEvent.TicketsLeft
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Concurrency error occurred while updating event");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // Delete event
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Organizer")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
             var eventItem = await _context.Events.FindAsync(id);

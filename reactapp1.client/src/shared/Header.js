@@ -45,7 +45,7 @@ const Header = () => {
                         {role && (
                             <>
                                 {/* Saved Events - Visible to all authenticated users */}
-                                <Link className="nav-link" to={"/saved-events"}>
+                                <Link className="nav-link" to={"/manage-events/saved-events"}>
                                     Saved Events
                                 </Link>
 
@@ -68,6 +68,11 @@ const Header = () => {
                                 {role === "Organizer" && (
                                     <Link className="nav-link" to={"/manage-events"}>
                                         Manage Events
+                                    </Link>
+                                )}
+                                {role === "Attendee" && (
+                                    <Link className="nav-link" to={"/manage-events/my-tickets"}>
+                                        My Tickets
                                     </Link>
                                 )}
                             </>
