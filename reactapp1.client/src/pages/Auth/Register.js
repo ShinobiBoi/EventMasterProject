@@ -102,6 +102,7 @@ const Signup = () => {
                             <Form.Select name="role" defaultValue="participant" required disabled={isSubmitting}>
                                 <option value="participant">Participant</option>
                                 <option value="organizer">Event Organizer</option>
+                                <option value="Admin">Admin</option>
                             </Form.Select>
                         </Form.Group>
                         <Button className="btn btn-dark w-100" type="submit" disabled={isSubmitting}>

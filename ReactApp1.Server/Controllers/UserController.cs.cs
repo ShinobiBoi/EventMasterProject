@@ -25,7 +25,7 @@ namespace ReactApp1.Server.Controllers
 
             if (user.Role == "Attendee")
                 user.IsApproved = true;
-            else if(user.Role == "Organizer")
+            else if(user.Role == "Organizer" || (user.Role == "Admin"))
                 user.IsApproved = false;
             else
                         return Unauthorized("Only Attendee or Organizer registration is allowed");
@@ -37,22 +37,6 @@ namespace ReactApp1.Server.Controllers
             return Ok("Registration successful.");
         }
 
-        [HttpPost("create-user")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateUser(User user)
-        {
-            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
-                return BadRequest("Email already exists");
-
-            if (user.Role != "Organizer" && user.Role != "Admin")
-                return BadRequest("Only Organizer or Admin can be created");
-
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-
-            return Ok("User created successfully");
-        }
 
         [HttpDelete("delete-user/{id}")]
         [Authorize(Roles = "Admin")]
@@ -84,7 +68,7 @@ namespace ReactApp1.Server.Controllers
         public async Task<IActionResult> GetPendingOrganizers()
         {
             var pendingOrganizers = await _context.Users
-                .Where(u => u.Role == "Organizer" && u.IsApproved == false)
+                .Where(u =>  u.IsApproved == false)
                 .ToListAsync();
 
             return Ok(pendingOrganizers);
@@ -94,18 +78,18 @@ namespace ReactApp1.Server.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ApproveOrganizer(Guid id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id && u.Role == "Organizer");
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
-                return NotFound("Organizer not found");
+                return NotFound("User not found");
 
             if (user.IsApproved)
-                return BadRequest("Organizer is already approved");
+                return BadRequest("User is already approved");
 
             user.IsApproved = true;
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
-            return Ok("Organizer approved successfully.");
+            return Ok("User approved successfully.");
         }
     }
 }

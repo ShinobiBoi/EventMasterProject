@@ -54,6 +54,7 @@ const Header = () => {
                                     <>
                                         <Link className="nav-link" to={"/manage-events"}>
                                             Manage Events
+                                           
                                         </Link>
                                         <Link className="nav-link" to="/manage-events/requests">
                                             Event Requests
