@@ -26,7 +26,7 @@ namespace ReactApp1.Server.Migrations
                     TicketsLeft = table.Column<int>(type: "int", nullable: false),
                     ParticipantsSubmitted = table.Column<int>(type: "int", nullable: false),
                     Submitted = table.Column<bool>(type: "bit", nullable: false),
-                    userId = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    userId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
