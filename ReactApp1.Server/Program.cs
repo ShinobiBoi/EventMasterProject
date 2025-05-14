@@ -60,6 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
 // Add Authorization service
 builder.Services.AddAuthorization();
 
@@ -101,8 +102,6 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseCors(); // Use it in the pipeline
 
 app.MapControllers();
 app.MapHub<EventHub>("/eventHub");
