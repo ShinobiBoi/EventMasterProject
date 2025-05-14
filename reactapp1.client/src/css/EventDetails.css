@@ -14,3 +14,100 @@
 .review-container p {
   margin: 0;
 }
+
+.event-title {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.event-organizer,
+.event-description,
+.event-date,
+.event-hour,
+.event-location,
+.event-ticket-price,
+.event-tickets-left,
+.event-participants,
+.total-price {
+    margin-bottom: 1rem;
+    color: #34495e;
+}
+
+.event-description {
+    line-height: 1.6;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem !important;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .event-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Attachments section styling */
+.attachments-section {
+    height: 100%;
+    min-height: 400px;
+}
+
+/* Notification styling */
+.notification {
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+}
+
+/* Button styling */
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* File upload styling */
+.file-upload {
+    border: 2px dashed #dee2e6;
+    padding: 1rem;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.file-upload:hover {
+    border-color: #007bff;
+}
+
+/* Loading spinner */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}

@@ -28,7 +28,9 @@ const AddEvent = () => {
         const data = {
             ...body,
             submitted: false,
-            userId
+            userId,
+            
+            
         };
         console.log('Form data:', data);
 

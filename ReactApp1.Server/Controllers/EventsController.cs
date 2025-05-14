@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ReactApp1.Server.Models;
+using ReactApp1.Server.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace ReactApp1.Server.Controllers
 {
@@ -14,10 +17,14 @@ namespace ReactApp1.Server.Controllers
     public class EventsController : ControllerBase
     {
         private readonly IaDatabaseContext _context;
+        private readonly IHubContext<EventHub> _hubContext;
+        private readonly IWebHostEnvironment _environment;
 
-        public EventsController(IaDatabaseContext context)
+        public EventsController(IaDatabaseContext context, IHubContext<EventHub> hubContext, IWebHostEnvironment environment)
         {
             _context = context;
+            _hubContext = hubContext;
+            _environment = environment;
         }
 
         // Get all events
@@ -138,7 +145,8 @@ namespace ReactApp1.Server.Controllers
                     TicketsLeft = eventItem.TicketsLeft,
                     ParticipantsSubmitted = eventItem.ParticipantsSubmitted,
                     Submitted = eventItem.Submitted,
-                    userId = eventItem.userId
+                    userId = eventItem.userId,
+                    AttachmentUrl = eventItem.AttachmentUrl
                 };
 
                 _context.Events.Add(newEvent);
@@ -250,5 +258,97 @@ namespace ReactApp1.Server.Controllers
 
             return NoContent();
         }
+
+        // Upload attachment for an event
+        [Authorize(Roles = "Admin,Organizer")]
+        [HttpPost("{id}/upload")]
+        public async Task<IActionResult> UploadAttachment(int id, IFormFile file)
+        {
+            var eventItem = await _context.Events.FindAsync(id);
+            if (eventItem == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            // Create uploads directory if it doesn't exist
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", id.ToString());
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            // Generate unique filename
+            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            // Save file
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Update event with attachment URL
+            eventItem.AttachmentUrl = $"/uploads/{id}/{fileName}";
+            await _context.SaveChangesAsync();
+
+            // Notify participants about new attachment
+            await _hubContext.Clients.Group(id.ToString()).SendAsync("NewAttachment", file.FileName);
+
+            return Ok(new { fileName = file.FileName, url = eventItem.AttachmentUrl });
+        }
+
+        // Send update to event participants
+        [Authorize(Roles = "Admin,Organizer")]
+        [HttpPost("{id}/update")]
+        public async Task<IActionResult> SendEventUpdate(int id, [FromBody] EventUpdate update)
+        {
+            var eventItem = await _context.Events.FindAsync(id);
+            if (eventItem == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            // Notify participants about the update
+            await _hubContext.Clients.Group(id.ToString()).SendAsync("EventUpdate", update.Message);
+
+            return Ok(new { message = "Update sent successfully" });
+        }
+
+        // Get event attachments
+        [HttpGet("{id}/attachments")]
+        public async Task<IActionResult> GetEventAttachments(int id)
+        {
+            var eventItem = await _context.Events.FindAsync(id);
+            if (eventItem == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", id.ToString());
+            if (!Directory.Exists(uploadsFolder))
+            {
+                return Ok(new List<string>());
+            }
+
+            var files = Directory.GetFiles(uploadsFolder)
+                .Select(f => new
+                {
+                    fileName = Path.GetFileName(f),
+                    url = $"/uploads/{id}/{Path.GetFileName(f)}"
+                })
+                .ToList();
+
+            return Ok(files);
+        }
+    }
+
+    public class EventUpdate
+    {
+        public string Message { get; set; }
     }
 }

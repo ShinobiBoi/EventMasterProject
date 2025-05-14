@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ReactApp1.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class db1 : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -26,6 +26,7 @@ namespace ReactApp1.Server.Migrations
                     TicketsLeft = table.Column<int>(type: "int", nullable: false),
                     ParticipantsSubmitted = table.Column<int>(type: "int", nullable: false),
                     Submitted = table.Column<bool>(type: "bit", nullable: false),
+                    AttachmentUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     userId = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>

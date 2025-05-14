@@ -28,7 +28,7 @@ public partial class Event
 
     public bool Submitted { get; set; } = false;
 
-    
+    public string AttachmentUrl { get; set; } 
     public String userId { get; set; }
 
 

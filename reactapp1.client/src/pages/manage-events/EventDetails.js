@@ -8,6 +8,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import "../../css/EventDetails.css"; // Create this CSS file for custom styles
 import { getUserId, getUserRole } from './authUtils';
+import EventAttachments from '../../components/EventAttachments';
 
 const EventDetails = () => {
     const { id } = useParams();
@@ -62,24 +63,24 @@ const EventDetails = () => {
         setIsRegistering(true);
         try {
 
-                // Register ticket
-                const ticketResponse = await fetch(`/api/tickets/${userId}/${event.eventid}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        numberOfTickets: ticketCount, // Fixed to 1 ticket
-                        totalPrice: totalPrice // Total price equals event price
-                    })
-                });
+            // Register ticket
+            const ticketResponse = await fetch(`/api/tickets/${userId}/${event.eventid}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    numberOfTickets: ticketCount, // Fixed to 1 ticket
+                    totalPrice: totalPrice // Total price equals event price
+                })
+            });
 
-                if (!ticketResponse.ok) {
-                    throw new Error("Failed to register ticket");
-                }
+            if (!ticketResponse.ok) {
+                throw new Error("Failed to register ticket");
+            }
 
-          // Register for each ticket
+            // Register for each ticket
             for (let i = 0; i < ticketCount; i++) {
                 // Update event registration with the total number of tickets
                 const eventResponse = await fetch(`/api/events/register/${event.eventid}`, {
@@ -147,36 +148,48 @@ const EventDetails = () => {
     if (!event) return null;
 
     return (
-        <div className="container p-5 d-flex justify-content-center">
-            <div className="card shadow-lg p-4 w-100 " style={{ maxWidth: "600px" }}>
-                <h2 className="mb-3 text-center event-title">{event.title}</h2>
-                <p className="event-organizer"><strong>Organizer:</strong> {event.organizerName}</p>
-                <p className="event-description"><strong>Description:</strong> {event.description}</p>
-                <p className="event-date"><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
-                <p className="event-hour"><strong>Time:</strong> {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                <p className="event-location"><strong>Location:</strong> {event.venue}</p>
-                <p className="event-ticket-price"><strong>Ticket Price:</strong> {event.ticketPrice} EGP</p>
-                <p className="event-tickets-left"><strong>Tickets Left:</strong> {event.ticketsLeft}</p>
-                <p className="event-participants"><strong>Participants:</strong> {event.participantsSubmitted}</p>
-                {userRole === "Attendee" && (
-                    <>
-                        <Form.Group controlId="ticketCount">
-                            <Form.Label>Select Number of Tickets:</Form.Label>
-                            <Form.Control
-                                as="select"
-                                value={ticketCount}
-                                onChange={(e) => setTicketCount(Number(e.target.value))}
-                                disabled={event.ticketsLeft <= 0}
-                            >
-                                {[...Array(event.ticketsLeft).keys()].map(i => (
-                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
-                                ))}
-                            </Form.Control>
-                        </Form.Group>
-                        <p className="total-price"><strong>Total Price:</strong> {totalPrice} EGP</p>
-                    </>
-                )}
-                {renderRegisterButton()}
+        <div className="container p-5">
+            <div className="row">
+                {/* Event Details Card */}
+                <div className="col-md-6">
+                    <div className="card shadow-lg p-4 mb-4">
+                        <h2 className="mb-3 text-center event-title">{event.title}</h2>
+                        <p className="event-organizer"><strong>Organizer:</strong> {event.organizerName}</p>
+                        <p className="event-description"><strong>Description:</strong> {event.description}</p>
+                        <p className="event-date"><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
+                        <p className="event-hour"><strong>Time:</strong> {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="event-location"><strong>Location:</strong> {event.venue}</p>
+                        <p className="event-ticket-price"><strong>Ticket Price:</strong> {event.ticketPrice} EGP</p>
+                        <p className="event-tickets-left"><strong>Tickets Left:</strong> {event.ticketsLeft}</p>
+                        <p className="event-participants"><strong>Participants:</strong> {event.participantsSubmitted}</p>
+                        {userRole === "Attendee" && (
+                            <>
+                                <Form.Group controlId="ticketCount">
+                                    <Form.Label>Select Number of Tickets:</Form.Label>
+                                    <Form.Control
+                                        as="select"
+                                        value={ticketCount}
+                                        onChange={(e) => setTicketCount(Number(e.target.value))}
+                                        disabled={event.ticketsLeft <= 0}
+                                    >
+                                        {[...Array(event.ticketsLeft).keys()].map(i => (
+                                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                        ))}
+                                    </Form.Control>
+                                </Form.Group>
+                                <p className="total-price"><strong>Total Price:</strong> {totalPrice} EGP</p>
+                            </>
+                        )}
+                        {renderRegisterButton()}
+                    </div>
+                </div>
+
+                {/* Event Attachments Section */}
+                <div className="col-md-6">
+                    <div className="card shadow-lg p-4">
+                        <EventAttachments eventId={id} />
+                    </div>
+                </div>
             </div>
         </div>
     );
