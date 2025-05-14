@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
+import { getUserRole } from '../pages/manage-events/authUtils';
 
 const EventAttachments = ({ eventId }) => {
     const [attachments, setAttachments] = useState([]);
@@ -10,7 +10,11 @@ const EventAttachments = ({ eventId }) => {
     const [connection, setConnection] = useState(null);
     const [error, setError] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const { user } = useAuth();
+
+    const token = localStorage.getItem("token"); // Assuming the token is stored in localStorage
+    const userRole = getUserRole(token);
+
+    
 
     useEffect(() => {
         // Initialize SignalR connection
@@ -161,7 +165,7 @@ const EventAttachments = ({ eventId }) => {
             </div>
 
             {/* Upload Section (for organizers) */}
-            {(user?.role === 'Admin' || user?.role === 'Organizer') && (
+            {(userRole === 'Admin' || userRole === 'Organizer') && (
                 <div className="mb-6">
                     <h3 className="text-lg font-semibold mb-2">Upload Attachment</h3>
                     <div className="flex gap-2">

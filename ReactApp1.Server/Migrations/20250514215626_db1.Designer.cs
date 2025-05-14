@@ -12,12 +12,8 @@ using ReactApp1.Server.Models;
 namespace ReactApp1.Server.Migrations
 {
     [DbContext(typeof(IaDatabaseContext))]
-<<<<<<<<<< Temporary merge branch 1:ReactApp1.Server/Migrations/20250509161914_db1.Designer.cs
-    [Migration("20250509161914_db1")]
+    [Migration("20250514215626_db1")]
     partial class db1
-==========
-    [Migration("20250503225104_InitialCreate")]
-    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,6 +32,10 @@ namespace ReactApp1.Server.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Eventid"));
+
+                    b.Property<string>("AttachmentUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -68,8 +68,9 @@ namespace ReactApp1.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("userId")
-                        .HasColumnType("int");
+                    b.Property<string>("userId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Eventid");
 

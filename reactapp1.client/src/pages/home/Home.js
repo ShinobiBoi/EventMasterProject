@@ -6,6 +6,7 @@ import Alert from "react-bootstrap/Alert";
 import axios from "axios";
 import { getUserId } from '../manage-events/authUtils';
 
+
 const Home = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);

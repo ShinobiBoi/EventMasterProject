@@ -28,6 +28,7 @@ const AddEvent = () => {
         const data = {
             ...body,
             submitted: false,
+            AttachmentUrl:"",
             userId,
             
             
