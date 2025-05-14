@@ -19,7 +19,7 @@ const EventAttachments = ({ eventId }) => {
     useEffect(() => {
         // Initialize SignalR connection
         const newConnection = new HubConnectionBuilder()
-            .withUrl('http://localhost:5000/eventHub', {
+            .withUrl('https://localhost:5008/eventHub', {
                 accessTokenFactory: () => localStorage.getItem('token')
             })
             .withAutomaticReconnect()

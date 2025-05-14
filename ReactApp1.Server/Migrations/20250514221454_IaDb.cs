@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ReactApp1.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class db1 : Migration
+    public partial class IaDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

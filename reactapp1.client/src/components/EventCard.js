@@ -16,7 +16,8 @@ const EventsCard = ({
     participantsSubmitted,
     onRegister,
     onSave,
-    userId
+    userId,
+    isApproved
 }) => {
     const navigate = useNavigate();
     const userRole = localStorage.getItem("userRole");
@@ -25,9 +26,7 @@ const EventsCard = ({
         navigate(`/manage-events/events/${eventId}`);
     };
 
-
     const renderRegistserButton = () => {
-        // Show "View Event" if Organizer or role is missing
         if (ticketsLeft <= 0 && userRole === "Attendee") {
             return (
                 <Button variant="danger" className="w-50 fw-semibold" disabled>
@@ -44,14 +43,12 @@ const EventsCard = ({
                     Register Now
                 </Button>
             );
-
         } else {
             return null;
         }
     };
 
     const renderSaveButton = () => {
-        // Show Save Event if user is logged in (including Organizer)
         if (userRole) {
             return (
                 <Button
@@ -69,15 +66,18 @@ const EventsCard = ({
     return (
         <Card className="shadow rounded-4 p-4 border-0">
             <Card.Body className="d-flex flex-column gap-4">
-                {/* Event Title */}
+                {/* Event Title and Status */}
                 <div className="text-center">
                     <h3 className="fw-bold mb-1">{title}</h3>
                     <small className="text-muted">Organized by {organizer}</small>
+                    <div className="status-indicator mt-2">
+                        <span className={`status-dot ${isApproved ? 'approved' : 'pending'}`} />
+                        {isApproved ? 'Approved' : 'Pending Approval'}
+                    </div>
                 </div>
 
                 {/* Event Details */}
                 <div className="px-2">
-
                     <div className="d-flex flex-wrap justify-content-between mt-3">
                         <div className="mb-2" style={{ minWidth: "45%" }}>
                             <strong>📍 Location:</strong><br />
@@ -98,6 +98,16 @@ const EventsCard = ({
                     </div>
                 </div>
 
+                {/* Real-time Updates Section */}
+                <div className="ticket-info">
+                    <div className="d-flex justify-content-between">
+                        <span>Participants: {participantsSubmitted}</span>
+                        <span className={`availability ${ticketsLeft < 5 ? 'text-danger' : 'text-success'}`}>
+                            {ticketsLeft < 5 ? 'Almost Gone!' : 'Available'}
+                        </span>
+                    </div>
+                </div>
+
                 {/* Action Buttons */}
                 <div className="d-flex gap-3">
                     {renderRegistserButton()}
@@ -109,7 +119,6 @@ const EventsCard = ({
                     >
                         View Event
                     </Button>
-
                 </div>
             </Card.Body>
         </Card>

@@ -12,8 +12,8 @@ using ReactApp1.Server.Models;
 namespace ReactApp1.Server.Migrations
 {
     [DbContext(typeof(IaDatabaseContext))]
-    [Migration("20250514215626_db1")]
-    partial class db1
+    [Migration("20250514221454_IaDb")]
+    partial class IaDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
