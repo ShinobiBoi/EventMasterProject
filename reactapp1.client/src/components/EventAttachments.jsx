@@ -11,45 +11,39 @@ const EventAttachments = ({ eventId }) => {
     const [error, setError] = useState(null);
     const [uploading, setUploading] = useState(false);
 
-    const token = localStorage.getItem("token"); // Assuming the token is stored in localStorage
+    const token = localStorage.getItem("token");
     const userRole = getUserRole(token);
-
-    
 
     useEffect(() => {
         // Initialize SignalR connection
         const newConnection = new HubConnectionBuilder()
-            .withUrl('https://localhost:5008/eventHub', {
-                accessTokenFactory: () => localStorage.getItem('token')
+            .withUrl('/eventHub', {
+                accessTokenFactory: () => token
             })
             .withAutomaticReconnect()
             .build();
 
         setConnection(newConnection);
 
-        // Start connection
         newConnection.start()
             .then(() => {
                 console.log('Connected to SignalR');
-                // Join the event group
                 newConnection.invoke('JoinEventGroup', eventId);
             })
             .catch(err => {
-                console.error('SignalR Connection Error: ', err);
+                console.error('SignalR Connection Error:', err);
                 setError('Failed to connect to real-time updates');
             });
 
-        // Set up event handlers
         newConnection.on('NewAttachment', (fileName) => {
             setNotifications(prev => [...prev, `New attachment uploaded: ${fileName}`]);
-            fetchAttachments(); // Refresh attachments list
+            fetchAttachments();
         });
 
         newConnection.on('EventUpdate', (message) => {
             setNotifications(prev => [...prev, `Event update: ${message}`]);
         });
 
-        // Cleanup on unmount
         return () => {
             newConnection.stop();
         };
@@ -73,7 +67,6 @@ const EventAttachments = ({ eventId }) => {
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
-            // Check file size (e.g., 10MB limit)
             if (file.size > 10 * 1024 * 1024) {
                 setError('File size must be less than 10MB');
                 event.target.value = null;
@@ -97,6 +90,7 @@ const EventAttachments = ({ eventId }) => {
             await axios.post(`/api/events/${eventId}/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`
                 },
             });
             setSelectedFile(null);
@@ -115,11 +109,16 @@ const EventAttachments = ({ eventId }) => {
         if (!message) return;
 
         try {
-            await axios.post(`/api/events/${eventId}/update`, { message });
+            await axios.post(`/api/events/${eventId}/update`, message, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             setNotifications(prev => [...prev, `Update sent: ${message}`]);
         } catch (error) {
             console.error('Error sending update:', error);
-            setError('Failed to send update. Please try again.');
+            setError('Failed to send update. Please make sure you are authorized.');
         }
     };
 
@@ -145,14 +144,12 @@ const EventAttachments = ({ eventId }) => {
         <div className="p-4">
             <h2 className="text-2xl font-bold mb-4">Event Attachments</h2>
 
-            {/* Error Display */}
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     {error}
                 </div>
             )}
 
-            {/* Notifications */}
             <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Notifications</h3>
                 <div className="max-h-40 overflow-y-auto">
@@ -164,7 +161,6 @@ const EventAttachments = ({ eventId }) => {
                 </div>
             </div>
 
-            {/* Upload Section (for organizers) */}
             {(userRole === 'Admin' || userRole === 'Organizer') && (
                 <div className="mb-6">
                     <h3 className="text-lg font-semibold mb-2">Upload Attachment</h3>
@@ -192,7 +188,6 @@ const EventAttachments = ({ eventId }) => {
                 </div>
             )}
 
-            {/* Attachments List */}
             <div>
                 <h3 className="text-lg font-semibold mb-2">Available Attachments</h3>
                 <div className="grid gap-2">
@@ -217,4 +212,4 @@ const EventAttachments = ({ eventId }) => {
     );
 };
 
-export default EventAttachments; 
+export default EventAttachments;

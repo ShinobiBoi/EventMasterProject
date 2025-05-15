@@ -39,7 +39,7 @@ namespace ReactApp1.Server.Controllers
             return Ok("Event saved");
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetSavedEvents(Guid userId)
         {

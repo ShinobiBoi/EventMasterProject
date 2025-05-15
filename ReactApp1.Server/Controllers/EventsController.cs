@@ -27,6 +27,14 @@ namespace ReactApp1.Server.Controllers
             _environment = environment;
         }
 
+        [HttpPost("send-notification")]
+        public async Task<IActionResult> SendNotification([FromBody] string message)
+        {
+            await _hubContext.Clients.All.SendAsync("ReceiveNotification", message);
+            return Ok(new { message = "Notification sent" });
+        }
+
+
         // Get all events
         [HttpGet]
         public async Task<IActionResult> GetEvents()
@@ -305,7 +313,7 @@ namespace ReactApp1.Server.Controllers
         // Send update to event participants
         [Authorize(Roles = "Admin,Organizer")]
         [HttpPost("{id}/update")]
-        public async Task<IActionResult> SendEventUpdate(int id, [FromBody] EventUpdate update)
+        public async Task<IActionResult> SendEventUpdate(int id, [FromBody] string update)
         {
             var eventItem = await _context.Events.FindAsync(id);
             if (eventItem == null)
@@ -314,7 +322,7 @@ namespace ReactApp1.Server.Controllers
             }
 
             // Notify participants about the update
-            await _hubContext.Clients.Group(id.ToString()).SendAsync("EventUpdate", update.Message);
+            await _hubContext.Clients.Group(id.ToString()).SendAsync("EventUpdate", update);
 
             return Ok(new { message = "Update sent successfully" });
         }

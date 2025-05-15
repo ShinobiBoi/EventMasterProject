@@ -202,25 +202,25 @@ const SavedEvents = () => {
                         <Col key={savedEvent.savedEventId}>
                             <Card className="shadow-sm h-100">
                                 <Card.Body className="d-flex flex-column">
-                                    <Card.Title className="text-primary">{savedEvent.event.title}</Card.Title>
+                                    <Card.Title className="text-primary">{savedEvent.title}</Card.Title>
                                     <Card.Subtitle className="mb-2 text-muted">
-                                        Organized by: {savedEvent.event.organizerName}
+                                        Organized by: {savedEvent.organizerName}
                                     </Card.Subtitle>
 
                                     <div className="mb-3">
-                                        <p className="mb-1"><strong>📅 Date:</strong> {new Date(savedEvent.event.eventDate).toLocaleString()}</p>
-                                        <p className="mb-1"><strong>📍 Location:</strong> {savedEvent.event.venue}</p>
-                                        <p className="mb-1"><strong>💰 Price:</strong> {savedEvent.event.ticketPrice} EGP</p>
-                                        <p className="mb-1"><strong>🎟️ Tickets Left:</strong> {savedEvent.event.ticketsLeft}</p>
-                                        <p className="mb-1"><strong>👥 Participants:</strong> {savedEvent.event.participantsSubmitted}</p>
+                                        <p className="mb-1"><strong>📅 Date:</strong> {new Date(savedEvent.eventDate).toLocaleString()}</p>
+                                        <p className="mb-1"><strong>📍 Location:</strong> {savedEvent.venue}</p>
+                                        <p className="mb-1"><strong>💰 Price:</strong> {savedEvent.ticketPrice} EGP</p>
+                                        <p className="mb-1"><strong>🎟️ Tickets Left:</strong> {savedEvent.ticketsLeft}</p>
+                                        <p className="mb-1"><strong>👥 Participants:</strong> {savedEvent.participantsSubmitted}</p>
                                     </div>
 
                                     <Card.Text className="flex-grow-1">
-                                        <strong>Description:</strong> {savedEvent.event.description}
+                                        <strong>Description:</strong> {savedEvent.description}
                                     </Card.Text>
 
                                     <div className="d-flex justify-content-end gap-2 mt-3">
-                                        {renderRegisterButton(savedEvent.event)}
+                                        {renderRegisterButton(savedEvent)}
                                         <Button
                                             variant="danger"
                                             size="sm"

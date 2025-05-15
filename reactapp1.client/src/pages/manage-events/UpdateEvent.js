@@ -45,7 +45,8 @@ const UpdateEvent = () => {
                     eventDate: new Date(response.data.eventDate).toISOString().slice(0, 16),
                     ticketPrice: response.data.ticketPrice,
                     ticketsLeft: response.data.ticketsLeft,
-                    participantsSubmitted: response.data.participantsSubmitted || 0
+                    participantsSubmitted: response.data.participantsSubmitted || 0,
+                    attachmentUrl: response.data.attachmentUrl
                 });
             } catch (err) {
                 console.error("Error fetching event:", err);
@@ -144,15 +145,45 @@ const UpdateEvent = () => {
 
                 <Form.Group className="mb-3">
                     <Form.Label>Venue *</Form.Label>
-                    <Form.Control
+                    <Form.Select
                         type="text"
                         name="venue"
                         value={formData.venue}
                         onChange={handleChange}
                         required
                         disabled={loading}
-                    />
+                    >
+                        <option value="" disabled>Select a city</option>
+                        <option>Alexandria</option>
+                        <option>Aswan</option>
+                        <option>Assiut</option>
+                        <option>Beheira</option>
+                        <option>Beni Suef</option>
+                        <option>Cairo</option>
+                        <option>Dakahlia</option>
+                        <option>Damietta</option>
+                        <option>Fayoum</option>
+                        <option>Gharbia</option>
+                        <option>Giza</option>
+                        <option>Ismailia</option>
+                        <option>Kafr el-Sheikh</option>
+                        <option>Matrouh</option>
+                        <option>Minya</option>
+                        <option>Menofia</option>
+                        <option>New Valley</option>
+                        <option>North Sinai</option>
+                        <option>Port Said</option>
+                        <option>Qualyubia</option>
+                        <option>Qena</option>
+                        <option>Red Sea</option>
+                        <option>Al-Sharqia</option>
+                        <option>Soha</option>
+                        <option>South Sinai</option>
+                        <option>Suez</option>
+                        <option>Luxor</option>
+                    </Form.Select>
                 </Form.Group>
+
 
                 <Form.Group className="mb-3">
                     <Form.Label>Event Date and Time *</Form.Label>

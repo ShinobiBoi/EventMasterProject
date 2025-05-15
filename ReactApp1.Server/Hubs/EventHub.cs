@@ -5,7 +5,7 @@ namespace ReactApp1.Server.Hubs
 {
     public class EventHub : Hub
     {
-        // Method for clients to join a specific event group
+        /*// Method for clients to join a specific event group
         public async Task JoinEventGroup(string eventId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, eventId);
@@ -28,6 +28,6 @@ namespace ReactApp1.Server.Hubs
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             await base.OnDisconnectedAsync(exception);
-        }
+        }*/
     }
 }

@@ -90,9 +90,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
-// Configure static files
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -100,8 +99,11 @@ app.UseStaticFiles(new StaticFileOptions
     DefaultContentType = "application/octet-stream"
 });
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseRouting();
+app.UseWebSockets();
+app.UseCors();            
+app.UseAuthentication();  
+app.UseAuthorization();   
 
 app.MapControllers();
 app.MapHub<EventHub>("/eventHub");
