@@ -4,7 +4,7 @@ import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import "../../css/ManageEvents.css";
 import { Link, useNavigate } from "react-router-dom";
-import {  getUserRole } from './authUtils';
+import { getUserRole } from './authUtils';
 
 const ReviewEvents = () => {
 
@@ -133,7 +133,6 @@ const ReviewEvents = () => {
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Image</th>
                                 <th>Event Name</th>
                                 <th>Description</th>
                                 <th>Organizer</th>
@@ -144,13 +143,6 @@ const ReviewEvents = () => {
                             {events.map((event) => (
                                 <tr key={event.eventid}>
                                     <td>{event.eventid}</td>
-                                    <td>
-                                        <img
-                                            src={event.imageUrl || "https://picsum.photos/200/300"}
-                                            alt="event"
-                                            className="image-avatar"
-                                        />
-                                    </td>
                                     <td>{event.title}</td>
                                     <td>{event.description}</td>
                                     <td>{event.organizerName}</td>

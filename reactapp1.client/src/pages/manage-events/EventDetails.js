@@ -8,7 +8,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import "../../css/EventDetails.css";
 import { getUserId, getUserRole } from './authUtils';
-import EventHub from "../../components/EventHub"; // Add this line
+import EventHub from "../../components/EventHub";
 
 const EventDetails = () => {
     const { id } = useParams();
@@ -17,10 +17,13 @@ const EventDetails = () => {
     const [error, setError] = useState("");
     const [ticketCount, setTicketCount] = useState(1);
     const [totalPrice, setTotalPrice] = useState(0);
-    const [userRole, setUserRole] = useState("");
     const [ticketsLeft, setTicketsLeft] = useState(0);
     const [isRegistering, setIsRegistering] = useState(false);
-    const [token, setToken] = useState("");
+
+
+    const token = localStorage.getItem("token"); // Assuming the token is stored in localStorage
+    const userId = getUserId(token);
+    const userRole = getUserRole(token);
 
     const fetchEvent = async () => {
         try {
@@ -47,14 +50,10 @@ const EventDetails = () => {
     }, [ticketCount, event]);
 
     useEffect(() => {
-        const localToken = localStorage.getItem("token");
-        const role = getUserRole(localToken);
-        setUserRole(role);
-        setToken(localToken);
+
     }, []);
 
     const handleRegister = async () => {
-        const userId = getUserId(token);
         if (!token || !userId) {
             alert("Please login to register for events");
             return;
@@ -132,6 +131,9 @@ const EventDetails = () => {
     if (error) return <Alert variant="danger" className="p-3">{error}</Alert>;
     if (!event) return null;
 
+    const showEventHub = userRole === "Organizer" && userId === event.userId;
+    const showEventHubforAttendee = userRole === "Attendee";
+
     return (
         <div className="container p-5">
             <div className="row">
@@ -143,14 +145,15 @@ const EventDetails = () => {
                         <p className="event-description"><strong>Description:</strong> {event.description}</p>
                         <p className="event-date"><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
                         <p className="event-hour"><strong>Time:</strong> {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                        <p className="event-location"><strong>Location:</strong> {event.venue}</p>
+                        <p className="event-location"><strong>Location:</strong> {event.venue, userRole}</p>
                         <p className="event-ticket-price"><strong>Ticket Price:</strong> {event.ticketPrice} EGP</p>
                         <p className="event-tickets-left"><strong>Tickets Left:</strong> {event.ticketsLeft}</p>
                         <p className="event-participants"><strong>Participants:</strong> {event.participantsSubmitted}</p>
+
                         {userRole === "Attendee" && (
                             <>
                                 <Form.Group controlId="ticketCount">
-                                    <Form.Label>Select Number of Tickets:</Form.Label>
+                                    <Form.Label>Select Number of Tickets: </Form.Label>
                                     <Form.Control
                                         as="select"
                                         value={ticketCount}
@@ -165,16 +168,26 @@ const EventDetails = () => {
                                 <p className="total-price"><strong>Total Price:</strong> {totalPrice} EGP</p>
                             </>
                         )}
+
                         {renderRegisterButton()}
                     </div>
                 </div>
 
-                {/* Event Attachments & Real-time Updates */}
-                <div className="col-md-6">
-                    <div className="card shadow-lg p-4">
-                        <EventHub eventId={id} token={token} role={userRole} />
+                {/* Event Attachments & Real-time Updates (Only for Organizer of this event) */}
+                {showEventHub && (
+                    <div className="col-md-6">
+                        <div className="card shadow-lg p-4">
+                            <EventHub eventId={id} token={token} role={userRole} />
+                        </div>
                     </div>
-                </div>
+                )}
+                {showEventHubforAttendee && (
+                    <div className="col-md-6">
+                        <div className="card shadow-lg p-4">
+                            <EventHub eventId={id} token={token} role={userRole} />
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

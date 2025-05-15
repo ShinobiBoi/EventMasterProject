@@ -7,104 +7,59 @@ import Col from 'react-bootstrap/Col';
 import Spinner from 'react-bootstrap/Spinner';
 import Alert from 'react-bootstrap/Alert';
 import { getUserId, getUserRole } from './authUtils';
+import { useNavigate } from 'react-router-dom';
 
 const SavedEvents = () => {
     const [savedEvents, setSavedEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [registering, setRegistering] = useState(false);
     const [removing, setRemoving] = useState(false);
+    const navigate = useNavigate();
 
     const token = localStorage.getItem("token");
     const userId = getUserId(token);
     const userRole = getUserRole(token);
 
-    useEffect(() => {
-        const fetchSavedEvents = async () => {
-            try {
-                setLoading(true);
-                setError("");
+    const fetchSavedEvents = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-                const response = await fetch(`/api/savedevents/user/${userId}`, {
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(response.status === 404
-                        ? "No saved events found"
-                        : "Failed to fetch saved events");
+            const response = await fetch(`/api/savedevents/user/${userId}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
                 }
+            });
 
-                const data = await response.json();
-                setSavedEvents(data || []);
-
-            } catch (err) {
-                console.error("Error fetching saved events:", err);
-                setError(err.message);
-            } finally {
-                setLoading(false);
+            if (!response.ok) {
+                throw new Error(response.status === 404
+                    ? "No saved events found"
+                    : "Failed to fetch saved events");
             }
-        };
 
+            const data = await response.json();
+            // Transform the data to only include the required fields
+            const simplifiedEvents = data.map(event => ({
+                eventid: event.eventid,
+                title: event.title,
+                description: event.description,
+                eventDate: event.eventDate,
+                venue: event.venue
+            }));
+            setSavedEvents(simplifiedEvents || []);
+        } catch (err) {
+            console.error("Error fetching saved events:", err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         if (userId) {
             fetchSavedEvents();
         }
     }, [userId, token]);
-
-    const handleRegister = async (eventid) => {
-        if (!userId) {
-            alert("Please login to register for events");
-            return;
-        }
-
-        setRegistering(true);
-        try {
-            // Create ticket
-            const ticketResponse = await fetch(`/api/tickets/${userId}/${eventid}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
-            });
-
-            if (!ticketResponse.ok) {
-                throw new Error("Failed to create ticket");
-            }
-
-            // Update event registration
-            const eventResponse = await fetch(`/api/events/register/${eventid}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
-            });
-
-            if (!eventResponse.ok) {
-                throw new Error("Failed to update event registration");
-            }
-
-            // Refresh saved events to show updated ticket count
-            const updatedResponse = await fetch(`/api/savedevents/user/${userId}`, {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            });
-            const updatedData = await updatedResponse.json();
-            setSavedEvents(updatedData || []);
-
-            alert("Successfully registered for the event!");
-
-        } catch (error) {
-            console.error("Registration error:", error);
-            alert(error.message);
-        } finally {
-            setRegistering(false);
-        }
-    };
 
     const handleRemove = async (eventId) => {
         setRemoving(true);
@@ -120,8 +75,8 @@ const SavedEvents = () => {
                 throw new Error("Failed to remove event");
             }
 
-            setSavedEvents(prev => prev.filter(event => event.eventId !== eventId));
             alert("Event removed from your saved list");
+            await fetchSavedEvents();
 
         } catch (error) {
             console.error("Error removing event:", error);
@@ -131,38 +86,8 @@ const SavedEvents = () => {
         }
     };
 
-    const renderRegisterButton = (event) => {
-        if (!userRole) return null;
-
-        if (event.ticketsLeft <= 0) {
-            return (
-                <Button variant="danger" size="sm" disabled>
-                    Sold Out
-                </Button>
-            );
-        }
-
-        if (userRole === "Attendee") {
-            return (
-                <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => handleRegister(event.eventid)}
-                    disabled={registering}
-                >
-                    {registering ? (
-                        <>
-                            <Spinner animation="border" size="sm" className="me-2" />
-                            Registering...
-                        </>
-                    ) : (
-                        "Register Now"
-                    )}
-                </Button>
-            );
-        }
-
-        return null;
+    const handleView = (eventId) => {
+        navigate(`/manage-events/events/${eventId}`);
     };
 
     if (loading) {
@@ -198,33 +123,31 @@ const SavedEvents = () => {
                 </Alert>
             ) : (
                 <Row xs={1} md={2} lg={3} className="g-4">
-                    {savedEvents.map((savedEvent) => (
-                        <Col key={savedEvent.savedEventId}>
+                    {savedEvents.map((event) => (
+                        <Col key={event.eventid}>
                             <Card className="shadow-sm h-100">
                                 <Card.Body className="d-flex flex-column">
-                                    <Card.Title className="text-primary">{savedEvent.title}</Card.Title>
-                                    <Card.Subtitle className="mb-2 text-muted">
-                                        Organized by: {savedEvent.organizerName}
-                                    </Card.Subtitle>
-
+                                    <Card.Title className="text-primary">{event.title}</Card.Title>
+                                    <Card.Text>
+                                        <strong>Description:</strong> {event.description}
+                                    </Card.Text>
                                     <div className="mb-3">
-                                        <p className="mb-1"><strong>📅 Date:</strong> {new Date(savedEvent.eventDate).toLocaleString()}</p>
-                                        <p className="mb-1"><strong>📍 Location:</strong> {savedEvent.venue}</p>
-                                        <p className="mb-1"><strong>💰 Price:</strong> {savedEvent.ticketPrice} EGP</p>
-                                        <p className="mb-1"><strong>🎟️ Tickets Left:</strong> {savedEvent.ticketsLeft}</p>
-                                        <p className="mb-1"><strong>👥 Participants:</strong> {savedEvent.participantsSubmitted}</p>
+                                        <p className="mb-1"><strong>📅 Date:</strong> {new Date(event.eventDate).toLocaleString()}</p>
+                                        <p className="mb-1"><strong>📍 Location:</strong> {event.venue}</p>
                                     </div>
 
-                                    <Card.Text className="flex-grow-1">
-                                        <strong>Description:</strong> {savedEvent.description}
-                                    </Card.Text>
-
                                     <div className="d-flex justify-content-end gap-2 mt-3">
-                                        {renderRegisterButton(savedEvent)}
+                                        <Button
+                                            variant="info"
+                                            size="sm"
+                                            onClick={() => handleView(event.eventid)}
+                                        >
+                                            View
+                                        </Button>
                                         <Button
                                             variant="danger"
                                             size="sm"
-                                            onClick={() => handleRemove(savedEvent.eventId)}
+                                            onClick={() => handleRemove(event.eventid)}
                                             disabled={removing}
                                         >
                                             {removing ? (

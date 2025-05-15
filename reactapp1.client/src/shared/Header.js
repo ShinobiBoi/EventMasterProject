@@ -4,14 +4,15 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import { Link } from "react-router-dom";
 import "../css/Header.css";
-import { removeAuthUser, getAuthUser } from "../helper/Storage";
 import { useNavigate } from "react-router-dom";
+import {  getUserRole } from '../../src/pages/manage-events/authUtils';
 
 const Header = () => {
     const navigate = useNavigate();
-    const role = localStorage.getItem("userRole")
+    const token = localStorage.getItem("token"); // Assuming the token is stored in localStorage
+    const role = getUserRole(token);
     const Logout = () => {
-        localStorage.removeItem("userRole")
+        localStorage.removeItem("token")
         navigate("/login");
     };
 

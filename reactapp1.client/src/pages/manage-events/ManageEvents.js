@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import Table from "react-bootstrap/Table";
 import "../../css/ManageEvents.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,7 +12,7 @@ const ManageEvents = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const navigate = useNavigate();
-    const token = localStorage.getItem("token"); // Assuming the token is stored in localStorage
+    const token = localStorage.getItem("token");
     const userId = getUserId(token);
     const userRole = getUserRole(token);
 
@@ -49,7 +49,7 @@ const ManageEvents = () => {
         try {
             await axios.delete(`/api/events/${eventid}`, {
                 headers: {
-                    Authorization: `Bearer ${token}` // Include the token in the request headers
+                    Authorization: `Bearer ${token}`
                 }
             });
             fetchEvents();
@@ -59,15 +59,13 @@ const ManageEvents = () => {
         }
     };
 
-    const handleView = async (eventId) => {
+    const handleView = (eventId) => {
         navigate(`/manage-events/events/${eventId}`);
     };
 
-    const handleUpdate = async (eventId) => {
+    const handleUpdate = (eventId) => {
         navigate(`/manage-events/update/${eventId}`);
     };
-
-
 
     if (userRole !== "Organizer") {
         return null;
@@ -108,31 +106,25 @@ const ManageEvents = () => {
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Image</th>
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Date</th>
                                 <th>Location</th>
                                 <th>Tickets Left</th>
+                                <th>Participants</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {events.map((event) => (
                                 <tr key={event.eventId}>
-                                    <td>{event.eventId}</td>
-                                    <td>
-                                        <img
-                                            src={event.imageUrl || "https://picsum.photos/200/300"}
-                                            alt="Event"
-                                            className="image-avatar"
-                                        />
-                                    </td>
+                                    <td>{event.eventid}</td>
                                     <td>{event.title}</td>
                                     <td>{event.description}</td>
                                     <td>{new Date(event.eventDate).toLocaleDateString()}</td>
                                     <td>{event.venue}</td>
                                     <td>{event.ticketsLeft}</td>
+                                    <td>{event.participantsSubmitted}</td>
                                     <td>
                                         <button
                                             className="btn btn-sm btn-danger"
@@ -147,7 +139,6 @@ const ManageEvents = () => {
                                             Update
                                         </button>
                                         <button
-                                            to={`/event/${event.eventId}`}
                                             className="btn btn-sm btn-info"
                                             onClick={() => handleView(event.eventid)}
                                         >

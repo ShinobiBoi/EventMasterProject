@@ -195,6 +195,11 @@ namespace ReactApp1.Server.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+
+                //  Send toast notification to all clients in the event group
+                await _hubContext.Clients.Group(id.ToString())
+                    .SendAsync("ReceiveUpdate", $"Event '{existingEvent.Title}' was updated!");
+
                 return Ok(existingEvent);
             }
             catch (DbUpdateConcurrencyException)
@@ -261,30 +266,87 @@ namespace ReactApp1.Server.Controllers
             return NoContent();
         }
 
-
         [Authorize(Roles = "Admin,Organizer")]
         [HttpPost("upload/{eventId}")]
         public async Task<IActionResult> UploadFile(int eventId, IFormFile file)
+
         {
-            var eventItem = await _context.Events.FindAsync(eventId);
-            if (eventItem == null) return NotFound("Event not found");
 
-            if (file == null || file.Length == 0) return BadRequest("Invalid file");
+            Console.WriteLine("44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444");
 
-            var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", eventId.ToString());
-            Directory.CreateDirectory(uploadsPath);
-
-            var filePath = Path.Combine(uploadsPath, file.FileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                Console.WriteLine($"Starting upload for event {eventId}");
+
+                var eventItem = await _context.Events.FindAsync(eventId);
+                if (eventItem == null)
+                {
+                    Console.WriteLine("Event not found");
+                    return NotFound("Event not found");
+                }
+
+                if (file == null || file.Length == 0)
+                {
+                    Console.WriteLine("Invalid file");
+                    return BadRequest("Invalid file");
+                }
+
+                Console.WriteLine($"Received file: {file.FileName}, Size: {file.Length} bytes");
+
+                var safeFileName = Path.GetFileName(file.FileName);
+                Console.WriteLine($"Safe filename: {safeFileName}");
+
+                var uploadsPath = Path.Combine(_environment.WebRootPath ?? "wwwroot", "uploads", eventId.ToString());
+                Console.WriteLine($"Upload path: {uploadsPath}");
+
+                // Ensure directory exists
+                try
+                {
+                    Directory.CreateDirectory(uploadsPath);
+                    Console.WriteLine("Directory created successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Directory creation failed: {ex}");
+                    return StatusCode(500, "Could not create upload directory");
+                }
+
+                var filePath = Path.Combine(uploadsPath, safeFileName);
+                Console.WriteLine($"Final file path: {filePath}");
+
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    Console.WriteLine("File saved successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"File save failed: {ex}");
+                    return StatusCode(500, "File save failed");
+                }
+
+                try
+                {
+                    await _hubContext.Clients.Group(eventId.ToString())
+                        .SendAsync("ReceiveUpdate", $"{safeFileName} uploaded.");
+                    Console.WriteLine("SignalR notification sent");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"SignalR failed: {ex}");
+                    // Don't fail the upload if SignalR fails
+                }
+
+                return Ok(new { message = "File uploaded", filename = safeFileName });
             }
-
-            // Send real-time update via SignalR
-            await _hubContext.Clients.Group(eventId.ToString())
-                .SendAsync("ReceiveUpdate", $"{file.FileName} uploaded.");
-
-            return Ok(new { message = "File uploaded", filename = file.FileName });
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Upload failed with exception: {ex}");
+                return StatusCode(500, $"Upload failed: {ex.Message}");
+            }
         }
 
 

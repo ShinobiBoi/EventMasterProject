@@ -31,14 +31,14 @@ namespace ReactApp1.Server.Hubs
             // Optional: Handle any cleanup when client disconnects unexpectedly
             await base.OnDisconnectedAsync(exception);
         }
-/*
+
         public async Task SendTextMessage(string eventId, string textMessage)
         {
             if (string.IsNullOrEmpty(eventId)) throw new ArgumentNullException(nameof(eventId));
             if (string.IsNullOrEmpty(textMessage)) throw new ArgumentNullException(nameof(textMessage));
 
             await Clients.Group(eventId).SendAsync("ReceiveUpdate", textMessage);
-        }*/
+        }
 
     }
 
