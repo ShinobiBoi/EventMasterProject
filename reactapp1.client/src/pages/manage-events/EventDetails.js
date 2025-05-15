@@ -1,4 +1,4 @@
-// src/pages/EventDetails.js
+﻿// src/pages/EventDetails.js
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -6,27 +6,28 @@ import Spinner from "react-bootstrap/Spinner";
 import Alert from "react-bootstrap/Alert";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import "../../css/EventDetails.css"; // Create this CSS file for custom styles
+import "../../css/EventDetails.css";
 import { getUserId, getUserRole } from './authUtils';
-import EventAttachments from '../../components/EventAttachments';
+import EventHub from "../../components/EventHub"; // Add this line
 
 const EventDetails = () => {
     const { id } = useParams();
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [ticketCount, setTicketCount] = useState(1); // Default to 1 ticket
-    const [totalPrice, setTotalPrice] = useState(0); // Total price based on ticket count
-    const [userRole, setUserRole] = useState(""); // User role
-    const [ticketsLeft, setTicketsLeft] = useState(0); // Tickets left
-    const [isRegistering, setIsRegistering] = useState(false); // Loading state for registration
+    const [ticketCount, setTicketCount] = useState(1);
+    const [totalPrice, setTotalPrice] = useState(0);
+    const [userRole, setUserRole] = useState("");
+    const [ticketsLeft, setTicketsLeft] = useState(0);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [token, setToken] = useState("");
 
     const fetchEvent = async () => {
         try {
             const res = await axios.get(`/api/events/${id}`);
             setEvent(res.data);
-            setTotalPrice(res.data.ticketPrice); // Set initial total price
-            setTicketsLeft(res.data.ticketsLeft); // Set tickets left
+            setTotalPrice(res.data.ticketPrice);
+            setTicketsLeft(res.data.ticketsLeft);
         } catch (err) {
             console.error(err);
             setError("Failed to load event.");
@@ -41,20 +42,19 @@ const EventDetails = () => {
 
     useEffect(() => {
         if (event) {
-            setTotalPrice(ticketCount * event.ticketPrice); // Update total price when ticket count changes
+            setTotalPrice(ticketCount * event.ticketPrice);
         }
     }, [ticketCount, event]);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        const role = getUserRole(token);
-        setUserRole(role); // Set user role from token
+        const localToken = localStorage.getItem("token");
+        const role = getUserRole(localToken);
+        setUserRole(role);
+        setToken(localToken);
     }, []);
 
     const handleRegister = async () => {
-        const token = localStorage.getItem("token");
         const userId = getUserId(token);
-
         if (!token || !userId) {
             alert("Please login to register for events");
             return;
@@ -62,8 +62,6 @@ const EventDetails = () => {
 
         setIsRegistering(true);
         try {
-
-            // Register ticket
             const ticketResponse = await fetch(`/api/tickets/${userId}/${event.eventid}`, {
                 method: "POST",
                 headers: {
@@ -71,18 +69,14 @@ const EventDetails = () => {
                     "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    numberOfTickets: ticketCount, // Fixed to 1 ticket
-                    totalPrice: totalPrice // Total price equals event price
+                    numberOfTickets: ticketCount,
+                    totalPrice: totalPrice
                 })
             });
 
-            if (!ticketResponse.ok) {
-                throw new Error("Failed to register ticket");
-            }
+            if (!ticketResponse.ok) throw new Error("Failed to register ticket");
 
-            // Register for each ticket
             for (let i = 0; i < ticketCount; i++) {
-                // Update event registration with the total number of tickets
                 const eventResponse = await fetch(`/api/events/register/${event.eventid}`, {
                     method: "PATCH",
                     headers: {
@@ -91,13 +85,10 @@ const EventDetails = () => {
                     }
                 });
 
-                if (!eventResponse.ok) {
-                    throw new Error("Failed to update event registration");
-                }
+                if (!eventResponse.ok) throw new Error("Failed to update event registration");
             }
-            alert(`Successfully registered for ${ticketCount} ticket(s)!`);
 
-            // Refresh event data
+            alert(`Successfully registered for ${ticketCount} ticket(s)!`);
             await fetchEvent();
 
         } catch (error) {
@@ -124,13 +115,7 @@ const EventDetails = () => {
                 >
                     {isRegistering ? (
                         <>
-                            <Spinner
-                                as="span"
-                                animation="border"
-                                size="sm"
-                                role="status"
-                                aria-hidden="true"
-                            />
+                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
                             <span className="ms-2">Registering...</span>
                         </>
                     ) : (
@@ -139,7 +124,7 @@ const EventDetails = () => {
                 </Button>
             );
         } else {
-            return null; // No button for other roles
+            return null;
         }
     };
 
@@ -184,10 +169,10 @@ const EventDetails = () => {
                     </div>
                 </div>
 
-                {/* Event Attachments Section */}
+                {/* Event Attachments & Real-time Updates */}
                 <div className="col-md-6">
                     <div className="card shadow-lg p-4">
-                        <EventAttachments eventId={id} />
+                        <EventHub eventId={id} token={token} role={userRole} />
                     </div>
                 </div>
             </div>

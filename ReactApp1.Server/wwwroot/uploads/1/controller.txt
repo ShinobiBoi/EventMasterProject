@@ -1,0 +1,151 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ReactApp1.Server.Models;
+
+namespace ReactApp1.Server.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class EventsController : ControllerBase
+    {
+        private readonly IaDatabaseContext _context;
+
+        public EventsController(IaDatabaseContext context)
+        {
+            _context = context;
+        }
+
+   
+        //get all events
+        [HttpGet]
+        public async Task<IActionResult> GetEvents()
+        {
+            var events = await _context.Events.ToListAsync();
+            return Ok(events);
+        }
+
+        // get single event
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetEvent(int id)
+        {
+            var eventItem = await _context.Events.FindAsync(id);
+
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(eventItem);
+        }
+
+        // add new event
+        [HttpPost]
+        public async Task<IActionResult> AddEvent(Event eventItem)
+        {
+            _context.Events.Add(eventItem);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetEvent), new { id = eventItem.Eventid }, eventItem);
+        }
+
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateEvent(Event eventItem)
+        {
+           var e = await _context.Events.FindAsync(eventItem.Eventid);
+          
+
+            if (e==null)
+            {
+                return NotFound("Event not found");
+            }
+
+            e = eventItem;
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> AcceptEvent(int eventId)
+        {
+            var e = await _context.Events.FindAsync(eventId);
+
+
+            if (e == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            e.Submitted = true;
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEvent(int id)
+        {
+            var eventItem = await _context.Events.FindAsync(id);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            _context.Events.Remove(eventItem);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        
+        [HttpGet("search/location/{location}")]
+        public async Task<IActionResult> SearchEventsByLocation(string location)
+        {
+            var events = await _context.Events
+                .Where(e => e.Venue.Contains(location))
+                .ToListAsync();
+
+            if (!events.Any())
+            {
+                return NotFound("No events found in the specified location");
+            }
+
+            return Ok(events);
+        }
+
+        
+        [HttpGet("search/title/{title}")]
+        public async Task<IActionResult> SearchEventsByTitle(string title)
+        {
+            var events = await _context.Events
+                .Where(e => e.Title.Contains(title))
+                .ToListAsync();
+
+            if (!events.Any())
+            {
+                return NotFound("No events found with the specified title");
+            }
+
+            return Ok(events);
+        }
+
+        
+        [HttpGet("search/date/{date}")]
+        public async Task<IActionResult> SearchEventsByDate(DateTime date)
+        {
+            var events = await _context.Events
+                .Where(e => e.EventDate.Date == date.Date)
+                .ToListAsync();
+
+            if (!events.Any())
+            {
+                return NotFound("No events found on the specified date");
+            }
+
+            return Ok(events);
+        }
+
+
+    }
+}

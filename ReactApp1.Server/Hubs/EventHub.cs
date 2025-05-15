@@ -1,33 +1,46 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace ReactApp1.Server.Hubs
 {
     public class EventHub : Hub
     {
-        /*// Method for clients to join a specific event group
+        public async Task SendUpdate(string eventId, string message)
+        {
+            await Clients.Group(eventId).SendAsync("ReceiveUpdate", message);
+        }
+
         public async Task JoinEventGroup(string eventId)
         {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentNullException(nameof(eventId));
+
             await Groups.AddToGroupAsync(Context.ConnectionId, eventId);
-            await Clients.Group(eventId).SendAsync("UserJoined", Context.ConnectionId);
         }
 
-        // Method to notify participants about new attachments
-        public async Task NotifyNewAttachment(string eventId, string fileName)
+        public async Task LeaveEventGroup(string eventId)
         {
-            await Clients.Group(eventId).SendAsync("NewAttachment", fileName);
+            if (string.IsNullOrEmpty(eventId))
+                return; // Gracefully handle empty eventId
+
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, eventId);
         }
 
-        // Method to notify participants about event updates
-        public async Task NotifyEventUpdate(string eventId, string updateMessage)
-        {
-            await Clients.Group(eventId).SendAsync("EventUpdate", updateMessage);
-        }
-
-        // Method to leave the group
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            // Optional: Handle any cleanup when client disconnects unexpectedly
             await base.OnDisconnectedAsync(exception);
+        }
+/*
+        public async Task SendTextMessage(string eventId, string textMessage)
+        {
+            if (string.IsNullOrEmpty(eventId)) throw new ArgumentNullException(nameof(eventId));
+            if (string.IsNullOrEmpty(textMessage)) throw new ArgumentNullException(nameof(textMessage));
+
+            await Clients.Group(eventId).SendAsync("ReceiveUpdate", textMessage);
         }*/
+
     }
+
 }
+

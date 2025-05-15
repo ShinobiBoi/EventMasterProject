@@ -27,12 +27,6 @@ namespace ReactApp1.Server.Controllers
             _environment = environment;
         }
 
-        [HttpPost("send-notification")]
-        public async Task<IActionResult> SendNotification([FromBody] string message)
-        {
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", message);
-            return Ok(new { message = "Notification sent" });
-        }
 
 
         // Get all events
@@ -102,17 +96,18 @@ namespace ReactApp1.Server.Controllers
             List<Event> events;
 
 
-            if (role.Equals("Organizer")){
+            if (role.Equals("Organizer"))
+            {
                 events = await _context.Events
                     .Where(e => e.userId.Equals(id))
                     .ToListAsync();
             }
             else
             {
-               events = await _context.Events.ToListAsync();
+                events = await _context.Events.ToListAsync();
 
             }
-            
+
             return Ok(events);
         }
 
@@ -133,7 +128,7 @@ namespace ReactApp1.Server.Controllers
         // Add new event
         [Authorize(Roles = "Admin,Organizer")]
         [HttpPost]
-        public async Task<IActionResult> AddEvent( Event eventItem)
+        public async Task<IActionResult> AddEvent(Event eventItem)
         {
             try
             {
@@ -153,8 +148,7 @@ namespace ReactApp1.Server.Controllers
                     TicketsLeft = eventItem.TicketsLeft,
                     ParticipantsSubmitted = eventItem.ParticipantsSubmitted,
                     Submitted = eventItem.Submitted,
-                    userId = eventItem.userId,
-                    AttachmentUrl = eventItem.AttachmentUrl
+                    userId = eventItem.userId
                 };
 
                 _context.Events.Add(newEvent);
@@ -267,96 +261,45 @@ namespace ReactApp1.Server.Controllers
             return NoContent();
         }
 
-        // Upload attachment for an event
+
         [Authorize(Roles = "Admin,Organizer")]
-        [HttpPost("{id}/upload")]
-        public async Task<IActionResult> UploadAttachment(int id, IFormFile file)
+        [HttpPost("upload/{eventId}")]
+        public async Task<IActionResult> UploadFile(int eventId, IFormFile file)
         {
-            var eventItem = await _context.Events.FindAsync(id);
-            if (eventItem == null)
-            {
-                return NotFound("Event not found");
-            }
+            var eventItem = await _context.Events.FindAsync(eventId);
+            if (eventItem == null) return NotFound("Event not found");
 
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("No file uploaded");
-            }
+            if (file == null || file.Length == 0) return BadRequest("Invalid file");
 
-            // Create uploads directory if it doesn't exist
-            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", id.ToString());
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
+            var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", eventId.ToString());
+            Directory.CreateDirectory(uploadsPath);
 
-            // Generate unique filename
-            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            // Save file
+            var filePath = Path.Combine(uploadsPath, file.FileName);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            // Update event with attachment URL
-            eventItem.AttachmentUrl = $"/uploads/{id}/{fileName}";
-            await _context.SaveChangesAsync();
+            // Send real-time update via SignalR
+            await _hubContext.Clients.Group(eventId.ToString())
+                .SendAsync("ReceiveUpdate", $"{file.FileName} uploaded.");
 
-            // Notify participants about new attachment
-            await _hubContext.Clients.Group(id.ToString()).SendAsync("NewAttachment", file.FileName);
-
-            return Ok(new { fileName = file.FileName, url = eventItem.AttachmentUrl });
+            return Ok(new { message = "File uploaded", filename = file.FileName });
         }
 
-        // Send update to event participants
-        [Authorize(Roles = "Admin,Organizer")]
-        [HttpPost("{id}/update")]
-        public async Task<IActionResult> SendEventUpdate(int id, [FromBody] string update)
+
+        [HttpGet("download/{eventId}/{filename}")]
+        [Authorize(Roles = "Admin,Organizer,Attendee")]
+        public IActionResult DownloadFile(int eventId, string filename)
         {
-            var eventItem = await _context.Events.FindAsync(id);
-            if (eventItem == null)
-            {
-                return NotFound("Event not found");
-            }
+            var path = Path.Combine(_environment.WebRootPath, "uploads", eventId.ToString(), filename);
+            if (!System.IO.File.Exists(path)) return NotFound();
 
-            // Notify participants about the update
-            await _hubContext.Clients.Group(id.ToString()).SendAsync("EventUpdate", update);
-
-            return Ok(new { message = "Update sent successfully" });
+            var bytes = System.IO.File.ReadAllBytes(path);
+            return File(bytes, "application/octet-stream", filename);
         }
 
-        // Get event attachments
-        [HttpGet("{id}/attachments")]
-        public async Task<IActionResult> GetEventAttachments(int id)
-        {
-            var eventItem = await _context.Events.FindAsync(id);
-            if (eventItem == null)
-            {
-                return NotFound("Event not found");
-            }
 
-            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", id.ToString());
-            if (!Directory.Exists(uploadsFolder))
-            {
-                return Ok(new List<string>());
-            }
-
-            var files = Directory.GetFiles(uploadsFolder)
-                .Select(f => new
-                {
-                    fileName = Path.GetFileName(f),
-                    url = $"/uploads/{id}/{Path.GetFileName(f)}"
-                })
-                .ToList();
-
-            return Ok(files);
-        }
     }
 
-    public class EventUpdate
-    {
-        public string Message { get; set; }
-    }
 }
